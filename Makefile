@@ -26,7 +26,7 @@ gen:
 	go tool oapi-codegen -config ./api/configs/spec.yml ./api/openapi.yml
 	@echo "===Generation complete!==="
 
-run: gen
+run:
 	@echo "===Run App==="
 	go run ./cmd/server/
 
