@@ -3,28 +3,9 @@ package handler
 import (
 	"encoding/json"
 	"net/http"
-	"strings"
-
 	"sketch-api-go/internal/generated"
+	"strings"
 )
-
-type Handler struct{}
-
-func New() *Handler {
-	return &Handler{}
-}
-
-var _ generated.ServerInterface = (*Handler)(nil)
-
-func (h *Handler) GetHealth(
-	w http.ResponseWriter,
-	r *http.Request,
-) {
-	w.Header().Set("Content-Type", "text/plain; charset=utf-8")
-	w.WriteHeader(http.StatusOK)
-
-	_, _ = w.Write([]byte("OK"))
-}
 
 func (h *Handler) RegisterUser(
 	w http.ResponseWriter,
