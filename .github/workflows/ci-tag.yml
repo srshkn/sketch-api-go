@@ -75,5 +75,5 @@ jobs:
           git config user.email \
             "41898282+github-actions[bot]@users.noreply.github.com"
 
-          git git tag "$TAG"
+          git tag "$TAG"
           git push origin "refs/tags/$TAG"
