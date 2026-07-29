@@ -5,17 +5,19 @@ CONTAINER := my-api-container
 
 .DEFAULT_GOAL := help
 
-.PHONY: help gen run docker-build docker-run docker-stop
+.PHONY: help gen run docker-build docker-run docker-stop docker-down docker-clean
 
 help:
 	@echo "sketch-api-go project"
 	@echo "Usage:"
-	@echo "  make help - ..."
-	@echo "  make gen - ..."
-	@echo "  make run - ..."
-	@echo "  make docker-build - ..."
-	@echo "  make docker-run - ..."
-	@echo "  make docker-stop - ..."
+	@echo "  make help         - show this help"
+	@echo "  make gen          - generate Go code from the OpenAPI specification"
+	@echo "  make run          - generate code and run the API server locally"
+	@echo "  make docker-build - generate code and build the Docker image"
+	@echo "  make docker-run   - run the Docker container on port 8080"
+	@echo "  make docker-stop  - stop the running Docker container"
+	@echo "  make docker-down  - remove the Docker container"
+	@echo "  make docker-clean - remove Docker resources and build cache"
 
 gen:
 	@echo "===Generating Go code from OpenAPI==="
@@ -40,3 +42,10 @@ docker-run:
 
 docker-stop:
 	docker stop $(CONTAINER)
+
+docker-down:
+	-docker rm -f $(CONTAINER)
+
+docker-clean: docker-down
+	-docker image rm $(IMAGE)
+	docker builder prune -af

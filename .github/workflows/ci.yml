@@ -1,0 +1,97 @@
+name: CI
+
+on:
+  push:
+    branches-ignore:
+      - main
+      - release
+    paths-ignore:
+      - README.md
+      - LICENSE
+      - .env.example
+      - docs/**
+      - .gitignore
+      - .dockerignore
+
+  pull_request:
+    branches: [main, develop]
+
+jobs:
+  checks-go:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Setup Go
+        uses: actions/setup-go@v7
+        with:
+          go-version-file: go.mod
+          cache: true
+
+      - name: Check formatting
+        shell: bash
+        run: |
+          files="$(gofmt -l .)"
+
+          if [[ -n "$files" ]]; then
+            echo "These files are not formatted:"
+            echo "$files"
+            exit 1
+          fi
+
+      - name: Vet
+        run: go vet ./...
+
+      - name: Test
+        run: go test ./...
+
+      - name: Build
+        run: go build ./...
+
+  checks-dockerfile:
+    needs: checks-go
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v4
+
+      - name: Build Docker image
+        uses: docker/build-push-action@v7
+        with:
+          context: .
+          file: Dockerfile
+          push: false
+          load: true
+          tags: sketch-backend:ci
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Start container
+        run: |
+          docker run -d \
+            --name sketch-backend-ci \
+            -p 8080:8080 \
+            sketch-backend:ci
+
+      - name: Check health endpoint
+        run: |
+          for attempt in {1..10}; do
+            if curl --fail --silent http://localhost:8080/health; then
+              exit 0
+            fi
+
+            sleep 1
+          done
+
+          docker logs sketch-backend-ci
+          exit 1
+
+      - name: Stop container
+        if: always()
+        run: docker rm -f sketch-backend-ci || true
