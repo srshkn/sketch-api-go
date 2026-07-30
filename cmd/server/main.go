@@ -1,17 +1,12 @@
 package main
 
 import (
-	"errors"
 	"log/slog"
-	"net"
-	"net/http"
 	"os"
 
+	"sketch-api-go/internal/app"
 	"sketch-api-go/internal/config"
-	"sketch-api-go/internal/generated"
-	"sketch-api-go/internal/handler"
 	"sketch-api-go/internal/logging"
-	"sketch-api-go/internal/swagger"
 )
 
 func main() {
@@ -26,33 +21,24 @@ func main() {
 		os.Exit(1)
 	}
 
+	serverApp := app.New(cfg)
+
 	logger := logging.New(cfg.Logger.Format)
 
-	mux := http.NewServeMux()
-
-	apiHandler := handler.New()
-
-	generated.HandlerFromMux(apiHandler, mux)
-
-	swagger.Register(mux)
-
-	addr := net.JoinHostPort(cfg.Server.Host, cfg.Server.Port)
-
 	logger.Info("starting server",
-		slog.String("address", addr),
+		slog.String("address", serverApp.Server.Addr),
 	)
 
 	logger.Info("server endpoints",
-		slog.String("api", "http://"+addr),
-		slog.String("swagger", "http://"+addr+"/docs/"),
+		slog.String("api", "http://"+serverApp.Server.Addr),
+		slog.String("swagger", "http://"+serverApp.Server.Addr+"/docs/"),
 	)
 
-	if err := http.ListenAndServe(addr, mux); err != nil &&
-		!errors.Is(err, http.ErrServerClosed) {
+	err = serverApp.Run()
+	if err != nil {
 		logger.Error(
 			"server stopped unexpectedly",
 			slog.Any("error", err),
 		)
-		os.Exit(1)
 	}
 }
