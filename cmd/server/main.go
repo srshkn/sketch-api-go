@@ -1,8 +1,11 @@
 package main
 
 import (
+	"context"
 	"log/slog"
 	"os"
+	"os/signal"
+	"syscall"
 
 	"sketch-api-go/internal/app"
 	"sketch-api-go/internal/config"
@@ -10,6 +13,13 @@ import (
 )
 
 func main() {
+	ctx, stop := signal.NotifyContext(
+		context.Background(),
+		os.Interrupt,
+		syscall.SIGTERM,
+	)
+	defer stop()
+
 	slog.Info("read config...")
 
 	cfg, err := config.New()
@@ -34,7 +44,7 @@ func main() {
 		slog.String("swagger", "http://"+serverApp.Server.Addr+"/docs/"),
 	)
 
-	err = serverApp.Run()
+	err = serverApp.Run(ctx)
 	if err != nil {
 		logger.Error(
 			"server stopped unexpectedly",
