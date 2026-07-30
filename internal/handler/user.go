@@ -7,7 +7,9 @@ import (
 	"strings"
 )
 
-func (h *Handler) RegisterUser(
+type UserHandler struct{}
+
+func (u *UserHandler) RegisterUser(
 	w http.ResponseWriter,
 	r *http.Request,
 ) {

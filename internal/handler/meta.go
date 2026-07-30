@@ -4,7 +4,9 @@ import (
 	"net/http"
 )
 
-func (h *Handler) GetHealth(
+type MetaHandler struct{}
+
+func (m *MetaHandler) GetHealth(
 	w http.ResponseWriter,
 	r *http.Request,
 ) {
