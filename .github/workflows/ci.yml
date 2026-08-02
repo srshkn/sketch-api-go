@@ -54,6 +54,13 @@ jobs:
     needs: checks-go
     runs-on: ubuntu-latest
 
+    env:
+        SERVER_HOST: ${{ secrets.SERVER_HOST }}
+        SERVER_PORT: ${{ secrets.SERVER_PORT }}
+
+
+        LOGGER_FORMAT: ${{ secrets.LOGGER_FORMAT }}
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v6
