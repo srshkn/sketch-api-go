@@ -17,6 +17,8 @@ func New() *Handler {
 	}
 }
 
+var _ generated.ServerInterface = (*Handler)(nil)
+
 func (h *Handler) GetHealth(w http.ResponseWriter, r *http.Request) {
 	h.meta.GetHealth(w, r)
 }
@@ -24,5 +26,3 @@ func (h *Handler) GetHealth(w http.ResponseWriter, r *http.Request) {
 func (h *Handler) RegisterUser(w http.ResponseWriter, r *http.Request) {
 	h.user.RegisterUser(w, r)
 }
-
-var _ generated.ServerInterface = (*Handler)(nil)
