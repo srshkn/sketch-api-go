@@ -83,8 +83,12 @@ jobs:
         run: |
           docker run -d \
             --name sketch-backend-ci \
-            -p 8080:8080 \
+            -p "${SERVER_PORT}:${SERVER_PORT}" \
+            -e SERVER_HOST \
+            -e SERVER_PORT \
+            -e LOGGER_FORMAT \
             sketch-backend:ci
+
 
       - name: Check health endpoint
         run: |
