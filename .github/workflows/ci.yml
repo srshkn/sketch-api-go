@@ -58,8 +58,13 @@ jobs:
         SERVER_HOST: ${{ secrets.SERVER_HOST }}
         SERVER_PORT: ${{ secrets.SERVER_PORT }}
 
-
         LOGGER_FORMAT: ${{ secrets.LOGGER_FORMAT }}
+
+        POSTGRES_HOST: ${{ secrets.POSTGRES_HOST }}
+        POSTGRES_PORT: ${{ secrets.POSTGRES_PORT }}
+        POSTGRES_USER: ${{ secrets.POSTGRES_USER }}
+        POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD }}
+        POSTGRES_DB: ${{ secrets.POSTGRES_DB }}
 
     steps:
       - name: Checkout repository
