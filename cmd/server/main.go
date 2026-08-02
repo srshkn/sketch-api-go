@@ -33,7 +33,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	pool, err := postgres.NewPool(ctx, cfg.Postgres.URL)
+	pool, err := postgres.NewPool(ctx, cfg.Postgres)
 	if err != nil {
 		slog.Error(
 			"connect to PostgreSQL: %v",
@@ -45,9 +45,9 @@ func main() {
 
 	_ = db.New(pool)
 
-	serverApp := app.New(cfg)
+	logger := logging.New(cfg.Logger)
 
-	logger := logging.New(cfg.Logger.Format)
+	serverApp := app.New(cfg.Server)
 
 	logger.Info("starting server",
 		slog.String("address", serverApp.Server.Addr),

@@ -5,6 +5,7 @@ import (
 	"net/url"
 	"os"
 	"strconv"
+	"time"
 )
 
 const (
@@ -16,12 +17,16 @@ const (
 )
 
 type PostgresConfig struct {
-	host     string
-	port     string
-	user     string
-	password string
-	dataBase string
-	URL      string
+	host            string
+	port            string
+	user            string
+	password        string
+	dataBase        string
+	URL             string
+	MaxOpenConns    int32
+	MinOpenConns    int32
+	ConnMaxLifetime time.Duration
+	MaxConnIdleTime time.Duration
 }
 
 func (p *PostgresConfig) validatePostgres() error {
@@ -88,11 +93,15 @@ func (p *PostgresConfig) createUrl() {
 
 func newPostgresConfig() (PostgresConfig, error) {
 	postgres := PostgresConfig{
-		host:     os.Getenv(postgresHostEnv),
-		port:     os.Getenv(postgresPortEnv),
-		user:     os.Getenv(postgresUserEnv),
-		password: os.Getenv(postgresPasswordEnv),
-		dataBase: os.Getenv(postgresDataBaseEnv),
+		host:            os.Getenv(postgresHostEnv),
+		port:            os.Getenv(postgresPortEnv),
+		user:            os.Getenv(postgresUserEnv),
+		password:        os.Getenv(postgresPasswordEnv),
+		dataBase:        os.Getenv(postgresDataBaseEnv),
+		MaxOpenConns:    10,
+		MinOpenConns:    2,
+		ConnMaxLifetime: time.Hour,
+		MaxConnIdleTime: 15 * time.Minute,
 	}
 
 	if err := postgres.validatePostgres(); err != nil {

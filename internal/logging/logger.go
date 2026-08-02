@@ -3,12 +3,13 @@ package logging
 import (
 	"log/slog"
 	"os"
+	"sketch-api-go/internal/config"
 )
 
-func New(env string) *slog.Logger {
+func New(cfg config.LoggerConfig) *slog.Logger {
 	var handler slog.Handler
 
-	switch env {
+	switch cfg.Format {
 	case "dev", "local":
 		handler = slog.NewTextHandler(
 			os.Stdout,

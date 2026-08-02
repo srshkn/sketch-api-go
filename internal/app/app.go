@@ -19,7 +19,7 @@ type ServerApp struct {
 	shutdownTimeout time.Duration
 }
 
-func New(cfg *config.Config) *ServerApp {
+func New(cfg config.ServerConfig) *ServerApp {
 	mux := http.NewServeMux()
 
 	apiHandler := handler.New()
@@ -29,7 +29,7 @@ func New(cfg *config.Config) *ServerApp {
 
 	server := &http.Server{
 		Handler: mux,
-		Addr:    net.JoinHostPort(cfg.Server.Host, cfg.Server.Port),
+		Addr:    net.JoinHostPort(cfg.Host, cfg.Port),
 	}
 
 	return &ServerApp{
