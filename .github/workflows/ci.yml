@@ -83,6 +83,20 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
+      - name: Start PostgreSQL
+        run: |
+          docker run -d \
+            --name postgres-ci \
+            --network sketch-ci \
+            -e POSTGRES_USER \
+            -e POSTGRES_PASSWORD \
+            -e POSTGRES_DB \
+            --health-cmd="pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}" \
+            --health-interval=2s \
+            --health-timeout=2s \
+            --health-retries=15 \
+            postgres:17
+
       - name: Start container
         run: |
           docker run -d \

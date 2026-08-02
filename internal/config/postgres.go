@@ -42,7 +42,7 @@ func (p *PostgresConfig) validatePostgres() error {
 	if err != nil {
 		return fmt.Errorf(
 			"environment variable %q must be a number: %w",
-			serverPortEnv,
+			postgresPortEnv,
 			err,
 		)
 	}
