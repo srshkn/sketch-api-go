@@ -9,7 +9,9 @@ import (
 
 	"sketch-api-go/internal/app"
 	"sketch-api-go/internal/config"
+	"sketch-api-go/internal/db"
 	"sketch-api-go/internal/logging"
+	"sketch-api-go/internal/postgres"
 )
 
 func main() {
@@ -30,6 +32,18 @@ func main() {
 		)
 		os.Exit(1)
 	}
+
+	pool, err := postgres.NewPool(ctx, cfg.Postgres.URL)
+	if err != nil {
+		slog.Error(
+			"connect to PostgreSQL: %v",
+			slog.Any("error", err),
+		)
+		os.Exit(1)
+	}
+	defer pool.Close()
+
+	_ = db.New(pool)
 
 	serverApp := app.New(cfg)
 

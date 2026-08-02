@@ -9,8 +9,9 @@ import (
 )
 
 type Config struct {
-	Server ServerConfig
-	Logger LoggerConfig
+	Server   ServerConfig
+	Logger   LoggerConfig
+	Postgres PostgresConfig
 }
 
 func New() (*Config, error) {
@@ -28,9 +29,15 @@ func New() (*Config, error) {
 		return nil, err
 	}
 
+	postgresConfig, err := newPostgresConfig()
+	if err != nil {
+		return nil, err
+	}
+
 	config := Config{
-		Server: serverConfig,
-		Logger: loggerConfig,
+		Server:   serverConfig,
+		Logger:   loggerConfig,
+		Postgres: postgresConfig,
 	}
 
 	return &config, nil
