@@ -93,7 +93,7 @@ jobs:
       - name: Check health endpoint
         run: |
           for attempt in {1..10}; do
-            if curl --fail --silent http://localhost:8080/health; then
+            if curl --fail --silent http://${SERVER_HOST}:${SERVER_PORT}/health; then
               exit 0
             fi
 
