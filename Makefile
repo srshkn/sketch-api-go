@@ -1,11 +1,38 @@
 # sketch-api-go/
 
+ifneq (,$(wildcard .env))
+	include .env
+	export
+endif
+
+# CONSTANS
 IMAGE := my-api
 CONTAINER := my-api-container
+ENV_FILE=.env
+ENV_EXAMPLE=.env.example
+COMPOSE=docker compose
+BASE=-f compose.yml
+
+# make запускается на хостовой машине, поэтому localhost.
+MIGRATION_DB_HOST ?= localhost
+MIGRATIONS_DIR := db/migrations
+MIGRATION_DB_PORT ?= 5433
+DATABASE_URL = postgres://$(POSTGRES_USER):$(POSTGRES_PASSWORD)@$(MIGRATION_DB_HOST):$(MIGRATION_DB_PORT)/$(POSTGRES_DB)?sslmode=disable
+
 
 .DEFAULT_GOAL := help
 
-.PHONY: help gen run docker-build docker-run docker-stop docker-down docker-clean
+# App
+.PHONY: help env gen run
+
+# Docker
+.PHONY: docker-build docker-run docker-stop docker-down docker-clean
+
+# Compose
+.PHONY: compose-dev compose-clean
+
+# Migrates
+.PHONY: migrate-create migrate-up migrate-down migrate-version
 
 help:
 	@echo "sketch-api-go project"
@@ -18,6 +45,12 @@ help:
 	@echo "  make docker-stop  - stop the running Docker container"
 	@echo "  make docker-down  - remove the Docker container"
 	@echo "  make docker-clean - remove Docker resources and build cache"
+
+env:
+	@if [ ! -f $(ENV_FILE) ]; then \
+		echo "Creating .env from .env.example"; \
+		cp $(ENV_EXAMPLE) $(ENV_FILE); \
+	fi
 
 gen:
 	@echo "===Generating Go code from OpenAPI==="
@@ -49,3 +82,44 @@ docker-down:
 docker-clean: docker-down
 	-docker image rm $(IMAGE)
 	docker builder prune -af
+
+compose-dev:
+	$(COMPOSE) --env-file ./$(ENV_FILE) \
+		$(BASE) \
+		-f infra/compose/dev.yml \
+		up --build
+
+compose-clean:
+	$(COMPOSE) down -v
+	docker builder prune -af
+
+
+migrate-create:
+	@test -n "$(name)" || \
+		(echo "Usage: make migrate-create name=add_user_status" && exit 1)
+	migrate create \
+		-ext sql \
+		-dir $(MIGRATIONS_DIR) \
+		-seq \
+		$(name)
+
+migrate-up:
+	migrate \
+		-path $(MIGRATIONS_DIR) \
+		-database "$(DATABASE_URL)" \
+		up
+
+migrate-down:
+	migrate \
+		-path $(MIGRATIONS_DIR) \
+		-database "$(DATABASE_URL)" \
+		down 1
+
+migrate-version:
+	migrate \
+		-path $(MIGRATIONS_DIR) \
+		-database "$(DATABASE_URL)" \
+		version
+
+sqlgen:
+	sqlc generate
