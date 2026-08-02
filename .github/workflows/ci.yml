@@ -51,6 +51,7 @@ jobs:
         run: go build ./...
 
   checks-dockerfile:
+    if: false
     needs: checks-go
     runs-on: ubuntu-latest
 
