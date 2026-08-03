@@ -42,8 +42,8 @@ components:
       required: [id, username]
       properties:
         id:
-          type: integer
-          format: int64
+          type: string
+          format: uuid
         username:
           type: string
 

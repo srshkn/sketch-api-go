@@ -63,8 +63,8 @@ type RegisterUserRequest struct {
 
 // UserResponse defines model for UserResponse.
 type UserResponse struct {
-	Id       int64  `json:"id"`
-	Username string `json:"username"`
+	Id       openapi_types.UUID `json:"id"`
+	Username string             `json:"username"`
 }
 
 // RegisterUserJSONRequestBody defines body for RegisterUser for application/json ContentType.
