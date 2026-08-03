@@ -43,11 +43,11 @@ func main() {
 	}
 	defer pool.Close()
 
-	_ = db.New(pool)
+	queries := db.New(pool)
 
 	logger := logging.New(cfg.Logger)
 
-	serverApp := app.New(cfg.Server)
+	serverApp := app.New(cfg.Server, queries)
 
 	logger.Info("starting server",
 		slog.String("address", serverApp.Server.Addr),
