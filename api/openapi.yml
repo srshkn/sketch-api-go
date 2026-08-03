@@ -17,15 +17,25 @@ components:
 
     RegisterUserRequest:
       type: object
-      required: [name, password]
+      required: [username, email, password, confirmation]
       properties:
-        name:
+        username:
           type: string
-          minLength: 5
+          minLength: 1
+        email:
+          type: string
+          format: email
+          maxLength: 254
         password:
           type: string
           format: password
           minLength: 8
+          maxLength: 128
+        confirmation:
+          type: string
+          format: password
+          minLength: 8
+          maxLength: 128
 
     UserResponse:
       type: object
@@ -51,10 +61,6 @@ components:
                 - INVALID_REQUEST
                 - UNAUTHORIZED
                 - NOT_FOUND
-                - ROOM_NOT_FOUND
-                - SLOT_NOT_FOUND
-                - SLOT_ALREADY_BOOKED
-                - BOOKING_NOT_FOUND
                 - FORBIDDEN
                 - SCHEDULE_EXISTS
                 - INTERNAL_ERROR
