@@ -4,11 +4,13 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"sketch-api-go/internal/generated"
+
 	"testing"
 )
 
 func TestGetHealth(t *testing.T) {
-	router := generated.HandlerFromMux(New(), http.NewServeMux())
+	handlerMeta := New(NewMetaHandler(), nil)
+	router := generated.HandlerFromMux(handlerMeta, http.NewServeMux())
 	request := httptest.NewRequest(http.MethodGet, "/health", nil)
 	response := httptest.NewRecorder()
 
