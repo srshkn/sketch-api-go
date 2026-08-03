@@ -39,12 +39,12 @@ components:
 
     UserResponse:
       type: object
-      required: [id, name]
+      required: [id, username]
       properties:
         id:
           type: integer
           format: int64
-        name:
+        username:
           type: string
 
     ErrorResponse:

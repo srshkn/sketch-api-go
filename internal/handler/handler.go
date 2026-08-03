@@ -10,10 +10,10 @@ type Handler struct {
 	user *UserHandler
 }
 
-func New() *Handler {
+func New(meta *MetaHandler, user *UserHandler) *Handler {
 	return &Handler{
-		meta: &MetaHandler{},
-		user: &UserHandler{},
+		meta: meta,
+		user: user,
 	}
 }
 

@@ -2,12 +2,22 @@ package handler
 
 import (
 	"encoding/json"
+	"log/slog"
 	"net/http"
 	"sketch-api-go/internal/generated"
+	"sketch-api-go/internal/service"
 	"strings"
 )
 
-type UserHandler struct{}
+type UserHandler struct {
+	service *service.UserService
+}
+
+func NewUserHandler(service *service.UserService) *UserHandler {
+	return &UserHandler{
+		service: service,
+	}
+}
 
 func (u *UserHandler) RegisterUser(
 	w http.ResponseWriter,
@@ -15,10 +25,7 @@ func (u *UserHandler) RegisterUser(
 ) {
 	var request generated.RegisterUserRequest
 
-	decoder := json.NewDecoder(r.Body)
-	decoder.DisallowUnknownFields()
-
-	if err := decoder.Decode(&request); err != nil {
+	if err := json.NewDecoder(r.Body).Decode(&request); err != nil {
 		writeError(
 			w,
 			http.StatusBadRequest,
@@ -28,9 +35,9 @@ func (u *UserHandler) RegisterUser(
 		return
 	}
 
-	request.Name = strings.TrimSpace(request.Name)
+	request.Username = strings.TrimSpace(request.Username)
 
-	if request.Name == "" {
+	if request.Username == "" {
 		writeError(
 			w,
 			http.StatusBadRequest,
@@ -50,9 +57,30 @@ func (u *UserHandler) RegisterUser(
 		return
 	}
 
+	req, err := u.service.Registration(r.Context(), generated.RegisterUserRequest{
+		Confirmation: request.Confirmation,
+		Email:        request.Email,
+		Password:     request.Password,
+		Username:     request.Username,
+	})
+	if err != nil {
+		slog.Error(
+			"user registration failed",
+			slog.Any("error", err),
+		)
+
+		writeError(
+			w,
+			http.StatusBadRequest,
+			generated.INVALIDREQUEST,
+			"password must not be empty",
+		)
+		return
+	}
+
 	response := generated.UserResponse{
-		Id:   1,
-		Name: request.Name,
+		Id:       int64(req.ID),
+		Username: req.Name,
 	}
 
 	writeJSON(w, http.StatusCreated, response)

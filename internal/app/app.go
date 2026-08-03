@@ -8,8 +8,10 @@ import (
 	"net"
 	"net/http"
 	"sketch-api-go/internal/config"
+	"sketch-api-go/internal/db"
 	"sketch-api-go/internal/generated"
 	"sketch-api-go/internal/handler"
+	"sketch-api-go/internal/service"
 	"sketch-api-go/internal/swagger"
 	"time"
 )
@@ -19,10 +21,15 @@ type ServerApp struct {
 	shutdownTimeout time.Duration
 }
 
-func New(cfg config.ServerConfig) *ServerApp {
+func New(cfg config.ServerConfig, db db.Querier) *ServerApp {
 	mux := http.NewServeMux()
 
-	apiHandler := handler.New()
+	userService := service.NewUserService(db)
+
+	metaHandler := handler.NewMetaHandler()
+	userHandler := handler.NewUserHandler(userService)
+
+	apiHandler := handler.New(metaHandler, userHandler)
 	generated.HandlerFromMux(apiHandler, mux)
 
 	swagger.Register(mux)

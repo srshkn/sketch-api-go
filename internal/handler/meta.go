@@ -6,6 +6,10 @@ import (
 
 type MetaHandler struct{}
 
+func NewMetaHandler() *MetaHandler {
+	return &MetaHandler{}
+}
+
 func (m *MetaHandler) GetHealth(
 	w http.ResponseWriter,
 	r *http.Request,
