@@ -9,29 +9,68 @@ import (
 	"context"
 )
 
-const createUser = `-- name: CreateUser :one
-INSERT INTO users (
-    name,
-    password_hash
-)
-VALUES ($1, $2)
-RETURNING id, name
+const byEmail = `-- name: ByEmail :one
+SELECT id, email
+FROM users
+WHERE LOWER(email) = LOWER($1)
 `
 
-type CreateUserParams struct {
-	Name         string `json:"name"`
-	PasswordHash string `json:"password_hash"`
+type ByEmailRow struct {
+	ID    int32  `json:"id"`
+	Email string `json:"email"`
 }
 
-type CreateUserRow struct {
+func (q *Queries) ByEmail(ctx context.Context, lower string) (ByEmailRow, error) {
+	row := q.db.QueryRow(ctx, byEmail, lower)
+	var i ByEmailRow
+	err := row.Scan(&i.ID, &i.Email)
+	return i, err
+}
+
+const byName = `-- name: ByName :one
+SELECT id, name
+FROM users
+WHERE name = $1
+`
+
+type ByNameRow struct {
 	ID   int32  `json:"id"`
 	Name string `json:"name"`
 }
 
-func (q *Queries) CreateUser(ctx context.Context, arg CreateUserParams) (CreateUserRow, error) {
-	row := q.db.QueryRow(ctx, createUser, arg.Name, arg.PasswordHash)
-	var i CreateUserRow
+func (q *Queries) ByName(ctx context.Context, name string) (ByNameRow, error) {
+	row := q.db.QueryRow(ctx, byName, name)
+	var i ByNameRow
 	err := row.Scan(&i.ID, &i.Name)
+	return i, err
+}
+
+const createUser = `-- name: CreateUser :one
+INSERT INTO users (
+    name,
+    email,
+    password_hash
+)
+VALUES ($1, $2, $3)
+RETURNING id, name, email
+`
+
+type CreateUserParams struct {
+	Name         string `json:"name"`
+	Email        string `json:"email"`
+	PasswordHash string `json:"password_hash"`
+}
+
+type CreateUserRow struct {
+	ID    int32  `json:"id"`
+	Name  string `json:"name"`
+	Email string `json:"email"`
+}
+
+func (q *Queries) CreateUser(ctx context.Context, arg CreateUserParams) (CreateUserRow, error) {
+	row := q.db.QueryRow(ctx, createUser, arg.Name, arg.Email, arg.PasswordHash)
+	var i CreateUserRow
+	err := row.Scan(&i.ID, &i.Name, &i.Email)
 	return i, err
 }
 
@@ -45,33 +84,41 @@ func (q *Queries) DeleteUser(ctx context.Context, id int32) error {
 	return err
 }
 
-const getUser = `-- name: GetUser :one
-SELECT id, name
+const getUserByEmail = `-- name: GetUserByEmail :one
+SELECT id, name, email, password_hash
 FROM users
-WHERE id = $1
+WHERE LOWER(email) = LOWER($1)
 `
 
-type GetUserRow struct {
-	ID   int32  `json:"id"`
-	Name string `json:"name"`
+type GetUserByEmailRow struct {
+	ID           int32  `json:"id"`
+	Name         string `json:"name"`
+	Email        string `json:"email"`
+	PasswordHash string `json:"password_hash"`
 }
 
-func (q *Queries) GetUser(ctx context.Context, id int32) (GetUserRow, error) {
-	row := q.db.QueryRow(ctx, getUser, id)
-	var i GetUserRow
-	err := row.Scan(&i.ID, &i.Name)
+func (q *Queries) GetUserByEmail(ctx context.Context, lower string) (GetUserByEmailRow, error) {
+	row := q.db.QueryRow(ctx, getUserByEmail, lower)
+	var i GetUserByEmailRow
+	err := row.Scan(
+		&i.ID,
+		&i.Name,
+		&i.Email,
+		&i.PasswordHash,
+	)
 	return i, err
 }
 
 const listUsers = `-- name: ListUsers :many
-SELECT id, name
+SELECT id, name, email
 FROM users
-ORDER BY id
+ORDER BY name
 `
 
 type ListUsersRow struct {
-	ID   int32  `json:"id"`
-	Name string `json:"name"`
+	ID    int32  `json:"id"`
+	Name  string `json:"name"`
+	Email string `json:"email"`
 }
 
 func (q *Queries) ListUsers(ctx context.Context) ([]ListUsersRow, error) {
@@ -83,7 +130,7 @@ func (q *Queries) ListUsers(ctx context.Context) ([]ListUsersRow, error) {
 	items := []ListUsersRow{}
 	for rows.Next() {
 		var i ListUsersRow
-		if err := rows.Scan(&i.ID, &i.Name); err != nil {
+		if err := rows.Scan(&i.ID, &i.Name, &i.Email); err != nil {
 			return nil, err
 		}
 		items = append(items, i)
