@@ -79,7 +79,7 @@ func (u *UserHandler) RegisterUser(
 	}
 
 	response := generated.UserResponse{
-		Id:       int64(req.ID),
+		Id:       req.ID,
 		Username: req.Name,
 	}
 

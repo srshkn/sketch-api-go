@@ -6,13 +6,15 @@ package db
 
 import (
 	"context"
+
+	"github.com/google/uuid"
 )
 
 type Querier interface {
 	ByEmail(ctx context.Context, lower string) (ByEmailRow, error)
 	ByName(ctx context.Context, name string) (ByNameRow, error)
 	CreateUser(ctx context.Context, arg CreateUserParams) (CreateUserRow, error)
-	DeleteUser(ctx context.Context, id int32) error
+	DeleteUser(ctx context.Context, id uuid.UUID) error
 	GetUserByEmail(ctx context.Context, lower string) (GetUserByEmailRow, error)
 	ListUsers(ctx context.Context) ([]ListUsersRow, error)
 }

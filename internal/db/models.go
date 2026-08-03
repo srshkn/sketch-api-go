@@ -4,9 +4,13 @@
 
 package db
 
+import (
+	"github.com/google/uuid"
+)
+
 type User struct {
-	ID           int32  `json:"id"`
-	Name         string `json:"name"`
-	PasswordHash string `json:"password_hash"`
-	Email        string `json:"email"`
+	ID           uuid.UUID `json:"id"`
+	Name         string    `json:"name"`
+	PasswordHash string    `json:"password_hash"`
+	Email        string    `json:"email"`
 }
