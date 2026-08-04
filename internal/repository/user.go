@@ -2,9 +2,10 @@ package repository
 
 import (
 	"context"
-	"sketch-api-go/internal/db"
 
 	"github.com/google/uuid"
+
+	"sketch-api-go/internal/db"
 )
 
 type UserRepository interface {

@@ -5,14 +5,16 @@ import (
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
-	"sketch-api-go/internal/db"
-	"sketch-api-go/internal/generated"
-	"sketch-api-go/internal/repository"
-	"sketch-api-go/internal/service"
 	"strings"
 	"testing"
 
 	"github.com/google/uuid"
+
+	"sketch-api-go/internal/db"
+	"sketch-api-go/internal/repository"
+	"sketch-api-go/internal/service"
+
+	v1Generated "sketch-api-go/internal/generated/v1"
 )
 
 type userRepositoryStub struct {
@@ -36,7 +38,7 @@ func newUserTestRouter(repo repository.UserRepository) http.Handler {
 	userHandler := NewUserHandler(userService)
 	handler := New(NewMetaHandler(), userHandler)
 
-	return generated.HandlerFromMux(handler,
+	return v1Generated.HandlerFromMux(handler,
 		http.NewServeMux())
 }
 
@@ -95,7 +97,7 @@ func TestRegisterUser(t *testing.T) {
 		)
 	}
 
-	var body generated.UserResponse
+	var body v1Generated.UserResponse
 	if err := json.NewDecoder(response.Body).Decode(&body); err != nil {
 		t.Fatalf("decode response body: %v", err)
 	}
@@ -155,7 +157,7 @@ func TestRegisterUserValidation(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			router := generated.HandlerFromMux(New(), http.NewServeMux())
+			router := v1Generated.HandlerFromMux(New(), http.NewServeMux())
 			request := httptest.NewRequest(
 				http.MethodPost,
 				"/user/register",
@@ -173,11 +175,11 @@ func TestRegisterUserValidation(t *testing.T) {
 				t.Errorf("Content-Type = %q, want %q", contentType, "application/json")
 			}
 
-			var body generated.ErrorResponse
+			var body v1Generated.ErrorResponse
 			if err := json.NewDecoder(response.Body).Decode(&body); err != nil {
 				t.Fatalf("decode response body: %v", err)
 			}
-			if body.Error.Code != generated.INVALIDREQUEST {
+			if body.Error.Code != v1Generated.INVALIDREQUEST {
 				t.Errorf("error code = %q, want %q", body.Error.Code, generated.INVALIDREQUEST)
 			}
 			if body.Error.Message != tt.wantMessage {

@@ -55,11 +55,11 @@ env:
 		cp $(ENV_EXAMPLE) $(ENV_FILE); \
 	fi
 
-api-gen:
+api-v1Gen:
 	@echo "===Generating Go code from OpenAPI==="
-	go tool oapi-codegen -config ./api/configs/server.yml ./api/openapi.yml
-	go tool oapi-codegen -config ./api/configs/models.yml ./api/openapi.yml
-	go tool oapi-codegen -config ./api/configs/spec.yml ./api/openapi.yml
+	go tool oapi-codegen -config ./api/v1/configs/server.yml ./api/v1/openapi.yml
+	go tool oapi-codegen -config ./api/v1/configs/models.yml ./api/v1/openapi.yml
+	go tool oapi-codegen -config ./api/v1/configs/spec.yml ./api/v1/openapi.yml
 	@echo "===Generation complete!==="
 
 run:

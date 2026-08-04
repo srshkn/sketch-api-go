@@ -6,9 +6,9 @@ import (
 	"fmt"
 	"time"
 
-	"sketch-api-go/internal/config"
-
 	"github.com/jackc/pgx/v5/pgxpool"
+
+	"sketch-api-go/internal/config"
 )
 
 func NewPool(ctx context.Context, cfg config.PostgresConfig) (*pgxpool.Pool, error) {

@@ -2,7 +2,8 @@ package handler
 
 import (
 	"net/http"
-	"sketch-api-go/internal/generated"
+
+	v1Generated "sketch-api-go/internal/generated/v1"
 )
 
 type Handler struct {
@@ -17,7 +18,7 @@ func New(meta *MetaHandler, user *UserHandler) *Handler {
 	}
 }
 
-var _ generated.ServerInterface = (*Handler)(nil)
+var _ v1Generated.ServerInterface = (*Handler)(nil)
 
 func (h *Handler) GetHealth(w http.ResponseWriter, r *http.Request) {
 	h.meta.GetHealth(w, r)

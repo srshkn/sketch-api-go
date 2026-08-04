@@ -3,6 +3,7 @@ package logging
 import (
 	"log/slog"
 	"os"
+
 	"sketch-api-go/internal/config"
 )
 

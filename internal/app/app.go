@@ -7,13 +7,15 @@ import (
 	"log/slog"
 	"net"
 	"net/http"
+	"time"
+
 	"sketch-api-go/internal/config"
 	"sketch-api-go/internal/db"
-	"sketch-api-go/internal/generated"
-	"sketch-api-go/internal/handler"
 	"sketch-api-go/internal/service"
 	"sketch-api-go/internal/swagger"
-	"time"
+
+	v1Generated "sketch-api-go/internal/generated/v1"
+	v1Handler "sketch-api-go/internal/handler/v1"
 )
 
 type ServerApp struct {
@@ -26,11 +28,17 @@ func New(cfg config.ServerConfig, db db.Querier) *ServerApp {
 
 	userService := service.NewUserService(db)
 
-	metaHandler := handler.NewMetaHandler()
-	userHandler := handler.NewUserHandler(userService)
+	v1MetaHandler := v1Handler.NewMetaHandler()
+	v1UserHandler := v1Handler.NewUserHandler(userService)
 
-	apiHandler := handler.New(metaHandler, userHandler)
-	generated.HandlerFromMux(apiHandler, mux)
+	v1APIHandler := v1Handler.New(v1MetaHandler, v1UserHandler)
+	v1Generated.HandlerWithOptions(
+		v1APIHandler,
+		v1Generated.StdHTTPServerOptions{
+			BaseRouter: mux,
+			BaseURL:    "/api/v1",
+		},
+	)
 
 	swagger.Register(mux)
 

@@ -4,9 +4,11 @@ import (
 	"encoding/json"
 	"log/slog"
 	"net/http"
-	"sketch-api-go/internal/generated"
-	"sketch-api-go/internal/service"
 	"strings"
+
+	"sketch-api-go/internal/service"
+
+	v1Generated "sketch-api-go/internal/generated/v1"
 )
 
 type UserHandler struct {
@@ -23,13 +25,13 @@ func (u *UserHandler) RegisterUser(
 	w http.ResponseWriter,
 	r *http.Request,
 ) {
-	var request generated.RegisterUserRequest
+	var request v1Generated.RegisterUserRequest
 
 	if err := json.NewDecoder(r.Body).Decode(&request); err != nil {
 		writeError(
 			w,
 			http.StatusBadRequest,
-			generated.INVALIDREQUEST,
+			v1Generated.INVALIDREQUEST,
 			"invalid request body",
 		)
 		return
@@ -41,7 +43,7 @@ func (u *UserHandler) RegisterUser(
 		writeError(
 			w,
 			http.StatusBadRequest,
-			generated.INVALIDREQUEST,
+			v1Generated.INVALIDREQUEST,
 			"name must not be empty",
 		)
 		return
@@ -51,13 +53,13 @@ func (u *UserHandler) RegisterUser(
 		writeError(
 			w,
 			http.StatusBadRequest,
-			generated.INVALIDREQUEST,
+			v1Generated.INVALIDREQUEST,
 			"password must not be empty",
 		)
 		return
 	}
 
-	req, err := u.service.Registration(r.Context(), generated.RegisterUserRequest{
+	req, err := u.service.Registration(r.Context(), v1Generated.RegisterUserRequest{
 		Confirmation: request.Confirmation,
 		Email:        request.Email,
 		Password:     request.Password,
@@ -72,13 +74,13 @@ func (u *UserHandler) RegisterUser(
 		writeError(
 			w,
 			http.StatusBadRequest,
-			generated.INVALIDREQUEST,
+			v1Generated.INVALIDREQUEST,
 			"password must not be empty",
 		)
 		return
 	}
 
-	response := generated.UserResponse{
+	response := v1Generated.UserResponse{
 		Id:       req.ID,
 		Username: req.Name,
 	}
@@ -100,10 +102,10 @@ func writeJSON(
 func writeError(
 	w http.ResponseWriter,
 	status int,
-	code generated.ErrorResponseErrorCode,
+	code v1Generated.ErrorResponseErrorCode,
 	message string,
 ) {
-	response := generated.ErrorResponse{}
+	response := v1Generated.ErrorResponse{}
 
 	response.Error.Code = code
 	response.Error.Message = message

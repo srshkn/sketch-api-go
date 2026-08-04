@@ -2,9 +2,11 @@ package service
 
 import (
 	"context"
+
 	"sketch-api-go/internal/db"
-	"sketch-api-go/internal/generated"
 	"sketch-api-go/internal/repository"
+
+	v1Generated "sketch-api-go/internal/generated/v1"
 )
 
 type UserService struct {
@@ -19,7 +21,7 @@ func NewUserService(user repository.UserRepository) *UserService {
 
 func (u *UserService) Registration(
 	ctx context.Context,
-	request generated.RegisterUserRequest,
+	request v1Generated.RegisterUserRequest,
 ) (db.CreateUserRow, error) {
 	user := db.CreateUserParams{
 		Name:         request.Username,
