@@ -16,14 +16,16 @@ import (
 
 	v1Generated "sketch-api-go/internal/generated/v1"
 	v1Handler "sketch-api-go/internal/handler/v1"
+	"sketch-api-go/internal/middleware"
 )
 
 type ServerApp struct {
-	Server          *http.Server
+	server          *http.Server
+	logger          *slog.Logger
 	shutdownTimeout time.Duration
 }
 
-func New(cfg config.ServerConfig, db db.Querier) *ServerApp {
+func New(cfg config.ServerConfig, logger *slog.Logger, db db.Querier) *ServerApp {
 	mux := http.NewServeMux()
 
 	userService := service.NewUserService(db)
@@ -37,6 +39,9 @@ func New(cfg config.ServerConfig, db db.Querier) *ServerApp {
 		v1Generated.StdHTTPServerOptions{
 			BaseRouter: mux,
 			BaseURL:    "/api/v1",
+			Middlewares: []v1Generated.MiddlewareFunc{
+				middleware.Logging(logger),
+			},
 		},
 	)
 
@@ -48,7 +53,8 @@ func New(cfg config.ServerConfig, db db.Querier) *ServerApp {
 	}
 
 	return &ServerApp{
-		Server:          server,
+		server:          server,
+		logger:          logger,
 		shutdownTimeout: 10 * time.Second,
 	}
 }
@@ -60,19 +66,19 @@ func (s *ServerApp) gracefulStop(serverErr <-chan error) error {
 	)
 	defer cancel()
 
-	slog.Info(
+	s.logger.Info(
 		"shutting down HTTP server",
 		slog.Duration("timeout", s.shutdownTimeout),
 	)
 
-	if err := s.Server.Shutdown(shutdownCtx); err != nil {
-		slog.Error(
+	if err := s.server.Shutdown(shutdownCtx); err != nil {
+		s.logger.Error(
 			"graceful shutdown failed",
 			slog.Any("error", err),
 		)
 
-		if closeErr := s.Server.Close(); closeErr != nil {
-			slog.Error(
+		if closeErr := s.server.Close(); closeErr != nil {
+			s.logger.Error(
 				"force close HTTP server failed",
 				slog.Any("error", closeErr),
 			)
@@ -86,7 +92,7 @@ func (s *ServerApp) gracefulStop(serverErr <-chan error) error {
 		return fmt.Errorf("HTTP server stopped: %w", err)
 	}
 
-	slog.Info("HTTP server stopped")
+	s.logger.Info("HTTP server stopped")
 
 	return nil
 }
@@ -95,8 +101,17 @@ func (s *ServerApp) Run(ctx context.Context) error {
 	serverErr := make(chan error, 1)
 
 	go func() {
-		serverErr <- s.Server.ListenAndServe()
+		serverErr <- s.server.ListenAndServe()
 	}()
+
+	s.logger.Info("starting server",
+		slog.String("address", s.server.Addr),
+	)
+
+	s.logger.Info("server endpoints",
+		slog.String("api", "http://"+s.server.Addr),
+		slog.String("swagger", "http://"+s.server.Addr+"/docs/"),
+	)
 
 	select {
 
@@ -107,7 +122,7 @@ func (s *ServerApp) Run(ctx context.Context) error {
 		return err
 
 	case <-ctx.Done():
-		slog.Info("shutdown signal received")
+		s.logger.Info("shutdown signal received")
 		return s.gracefulStop(serverErr)
 
 	}

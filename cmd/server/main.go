@@ -22,8 +22,6 @@ func main() {
 	)
 	defer stop()
 
-	slog.Info("read config...")
-
 	cfg, err := config.New()
 	if err != nil {
 		slog.Error(
@@ -33,9 +31,11 @@ func main() {
 		os.Exit(1)
 	}
 
+	logger := logging.New(cfg.Logger)
+
 	pool, err := postgres.NewPool(ctx, cfg.Postgres)
 	if err != nil {
-		slog.Error(
+		logger.Error(
 			"connect to PostgreSQL: %v",
 			slog.Any("error", err),
 		)
@@ -45,18 +45,7 @@ func main() {
 
 	queries := db.New(pool)
 
-	logger := logging.New(cfg.Logger)
-
-	serverApp := app.New(cfg.Server, queries)
-
-	logger.Info("starting server",
-		slog.String("address", serverApp.Server.Addr),
-	)
-
-	logger.Info("server endpoints",
-		slog.String("api", "http://"+serverApp.Server.Addr),
-		slog.String("swagger", "http://"+serverApp.Server.Addr+"/docs/"),
-	)
+	serverApp := app.New(cfg.Server, logger, queries)
 
 	err = serverApp.Run(ctx)
 	if err != nil {
