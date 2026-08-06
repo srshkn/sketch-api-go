@@ -53,6 +53,12 @@ type InternalErrorResponse struct {
 	Message string `json:"message"`
 }
 
+// LoginUserRequest defines model for LoginUserRequest.
+type LoginUserRequest struct {
+	Email    openapi_types.Email `json:"email"`
+	Password string              `json:"password"`
+}
+
 // RegisterUserRequest defines model for RegisterUserRequest.
 type RegisterUserRequest struct {
 	Confirmation string              `json:"confirmation"`
@@ -66,6 +72,9 @@ type UserResponse struct {
 	Id       openapi_types.UUID `json:"id"`
 	Username string             `json:"username"`
 }
+
+// LoginUserJSONRequestBody defines body for LoginUser for application/json ContentType.
+type LoginUserJSONRequestBody = LoginUserRequest
 
 // RegisterUserJSONRequestBody defines body for RegisterUser for application/json ContentType.
 type RegisterUserJSONRequestBody = RegisterUserRequest

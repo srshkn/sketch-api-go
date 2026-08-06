@@ -26,7 +26,7 @@ DATABASE_URL = postgres://$(POSTGRES_USER):$(POSTGRES_PASSWORD)@$(MIGRATION_DB_H
 .PHONY: help run
 
 # Generation
-.PHONY: env-gen api-gen sql-gen
+.PHONY: env-gen api-v1gen sql-gen
 
 # Docker
 .PHONY: docker-build docker-run docker-stop docker-down docker-clean
@@ -55,7 +55,7 @@ env:
 		cp $(ENV_EXAMPLE) $(ENV_FILE); \
 	fi
 
-api-v1Gen:
+api-v1gen:
 	@echo "===Generating Go code from OpenAPI==="
 	go tool oapi-codegen -config ./api/v1/configs/server.yml ./api/v1/openapi.yml
 	go tool oapi-codegen -config ./api/v1/configs/models.yml ./api/v1/openapi.yml

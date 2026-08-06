@@ -37,6 +37,20 @@ components:
           minLength: 8
           maxLength: 128
 
+    LoginUserRequest:
+      type: object
+      required: [email, password]
+      properties:
+        email:
+          type: string
+          format: email
+          maxLength: 254
+        password:
+          type: string
+          format: password
+          minLength: 8
+          maxLength: 128
+
     UserResponse:
       type: object
       required: [id, username]
@@ -129,8 +143,48 @@ paths:
             application/json:
               schema: { $ref: '#/components/schemas/ErrorResponse' }
 
-        "409":
+        '409':
           description: Пользователь уже существует
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+        '500':
+          description: Внутренняя ошибка сервера
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/InternalErrorResponse' }
+
+  /user/login:
+    post:
+      tags: [User]
+      summary: "Аутентификация пользователя."
+      description: "..."
+      operationId: loginUser
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginUserRequest'
+
+      responses:
+        '200':
+          description: Пользователь вошёл
+          content:
+            application/json:
+              schema:
+                 $ref: '#/components/schemas/UserResponse'
+
+        '400':
+            description: Неверный запрос
+            content:
+              application/json:
+                schema: { $ref: '#/components/schemas/ErrorResponse' }
+
+        '409':
+          description: Пользователя не существует
           content:
             application/json:
               schema:

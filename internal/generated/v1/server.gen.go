@@ -15,6 +15,9 @@ type ServerInterface interface {
 	// Проверка жизни API.
 	// (GET /health)
 	GetHealth(w http.ResponseWriter, r *http.Request)
+	// Аутентификация пользователя.
+	// (POST /user/login)
+	LoginUser(w http.ResponseWriter, r *http.Request)
 	// Регистрация пользователя.
 	// (POST /user/register)
 	RegisterUser(w http.ResponseWriter, r *http.Request)
@@ -34,6 +37,20 @@ func (siw *ServerInterfaceWrapper) GetHealth(w http.ResponseWriter, r *http.Requ
 
 	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		siw.Handler.GetHealth(w, r)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// LoginUser operation middleware
+func (siw *ServerInterfaceWrapper) LoginUser(w http.ResponseWriter, r *http.Request) {
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.LoginUser(w, r)
 	}))
 
 	for _, middleware := range siw.HandlerMiddlewares {
@@ -178,6 +195,7 @@ func HandlerWithOptions(si ServerInterface, options StdHTTPServerOptions) http.H
 	}
 
 	m.HandleFunc(http.MethodGet+" "+options.BaseURL+"/health", wrapper.GetHealth)
+	m.HandleFunc(http.MethodPost+" "+options.BaseURL+"/user/login", wrapper.LoginUser)
 	m.HandleFunc(http.MethodPost+" "+options.BaseURL+"/user/register", wrapper.RegisterUser)
 
 	return m
