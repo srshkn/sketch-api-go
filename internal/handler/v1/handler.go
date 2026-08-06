@@ -24,6 +24,10 @@ func (h *Handler) GetHealth(w http.ResponseWriter, r *http.Request) {
 	h.meta.GetHealth(w, r)
 }
 
+func (h *Handler) LoginUser(w http.ResponseWriter, r *http.Request) {
+	h.user.LoginUser(w, r)
+}
+
 func (h *Handler) RegisterUser(w http.ResponseWriter, r *http.Request) {
 	h.user.RegisterUser(w, r)
 }
