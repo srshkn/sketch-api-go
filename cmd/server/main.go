@@ -12,6 +12,7 @@ import (
 	"sketch-api-go/internal/db"
 	"sketch-api-go/internal/logging"
 	"sketch-api-go/internal/postgres"
+	"sketch-api-go/internal/token"
 )
 
 func main() {
@@ -43,9 +44,11 @@ func main() {
 	}
 	defer pool.Close()
 
+	jwtManager := token.New(cfg.Token)
+
 	queries := db.New(pool)
 
-	serverApp := app.New(cfg.Server, logger, queries)
+	serverApp := app.New(cfg.Server, logger, queries, jwtManager)
 
 	err = serverApp.Run(ctx)
 	if err != nil {

@@ -17,6 +17,7 @@ import (
 	v1Generated "sketch-api-go/internal/generated/v1"
 	v1Handler "sketch-api-go/internal/handler/v1"
 	"sketch-api-go/internal/middleware"
+	"sketch-api-go/internal/token"
 )
 
 type ServerApp struct {
@@ -25,11 +26,16 @@ type ServerApp struct {
 	shutdownTimeout time.Duration
 }
 
-func New(cfg config.ServerConfig, logger *slog.Logger, db db.Querier) *ServerApp {
+func New(
+	cfg config.ServerConfig,
+	logger *slog.Logger,
+	db db.Querier,
+	jwtManager *token.Manager,
+) *ServerApp {
 	mux := http.NewServeMux()
 
 	userService := service.NewUserService(db)
-	authService := service.NewAuthService(db)
+	authService := service.NewAuthService(db, jwtManager)
 
 	v1MetaHandler := v1Handler.NewMetaHandler()
 	v1UserHandler := v1Handler.NewUserHandler(userService)
