@@ -26,9 +26,9 @@ services:
         context: .
         dockerfile: Dockerfile
       restart: unless-stopped
-      depends_on:
-        db:
-          condition: service_healthy
+      #depends_on:
+      #  db:
+      #    condition: service_healthy
       volumes:
             - ./secrets:/app/secrets:ro
       environment:
@@ -47,7 +47,7 @@ services:
         JWT_PATH_PUBLIC_KEY: ${JWT_PATH_PUBLIC_KEY}
 
         ACCESS_EXPIRES_MINUTES: ${ACCESS_EXPIRES_MINUTES}
-        REFRESH_EXPIRES_MINUTES: ${REFRESH_EXPIRES_MINUTES}
+        REFRESH_EXPIRES_DAYS: ${REFRESH_EXPIRES_DAYS}
 
         REFRESH_COOKIE_NAME: ${REFRESH_COOKIE_NAME}
 
