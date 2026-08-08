@@ -2,7 +2,6 @@ package token
 
 import (
 	"crypto/rand"
-	"crypto/rsa"
 	"crypto/sha256"
 	"encoding/base64"
 	"encoding/hex"
@@ -10,6 +9,8 @@ import (
 	"time"
 
 	"github.com/golang-jwt/jwt/v5"
+
+	"sketch-api-go/internal/config"
 )
 
 type RefreshToken string
@@ -26,48 +27,45 @@ type Claims struct {
 	jwt.RegisteredClaims
 }
 
-func newClaims(userID, tokenType string) *Claims {
+func newClaims(userID, tokenType, issuer string, accessMinutes int) *Claims {
 	return &Claims{
 		UserID:    userID,
 		TokenType: tokenType,
 
 		RegisteredClaims: jwt.RegisteredClaims{
-			ExpiresAt: jwt.NewNumericDate(time.Now().Add(15 * time.Minute)),
+			ExpiresAt: jwt.NewNumericDate(time.Now().Add(time.Duration(accessMinutes) * time.Minute)),
 			IssuedAt:  jwt.NewNumericDate(time.Now()),
-			Issuer:    "sketch-api-go",
+			Issuer:    issuer,
 			Subject:   userID,
 		},
 	}
 }
 
 type Manager struct {
-	privateKey *rsa.PrivateKey
-	publicKey  *rsa.PublicKey
+	config      config.JWTConfig
+	accessName  string
+	refreshName string
 }
 
-func NewTokenManager(privatePEM, publicPEM []byte) (*Manager, error) {
-	privateKey, err := jwt.ParseRSAPrivateKeyFromPEM(privatePEM)
-	if err != nil {
-		return nil, err
-	}
-
-	publicKey, err := jwt.ParseRSAPublicKeyFromPEM(publicPEM)
-	if err != nil {
-		return nil, err
-	}
-
+func New(cfg config.JWTConfig) *Manager {
 	return &Manager{
-		privateKey: privateKey,
-		publicKey:  publicKey,
-	}, nil
+		config:      cfg,
+		accessName:  Access,
+		refreshName: Refresh,
+	}
 }
 
 func (m *Manager) CreateAccessToken(userID string) (string, error) {
-	claim := newClaims(userID, Access)
+	claim := newClaims(
+		userID,
+		m.accessName,
+		m.config.Issuer,
+		m.config.AccessExpiresMinutes,
+	)
 
 	token := jwt.NewWithClaims(jwt.SigningMethodRS256, claim)
 
-	return token.SignedString(m.privateKey)
+	return token.SignedString(m.config.PrivateKey)
 }
 
 func (m *Manager) Parse(tokenString string) (*Claims, error) {
@@ -78,7 +76,7 @@ func (m *Manager) Parse(tokenString string) (*Claims, error) {
 			if _, ok := token.Method.(*jwt.SigningMethodRSA); !ok {
 				return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
 			}
-			return m.publicKey, nil
+			return m.config.PublicKey, nil
 		},
 	)
 
