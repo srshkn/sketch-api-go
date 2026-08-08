@@ -13,6 +13,7 @@ import (
 	"sketch-api-go/internal/config"
 )
 
+type AccessToken string
 type RefreshToken string
 
 const (
@@ -55,7 +56,7 @@ func New(cfg config.JWTConfig) *Manager {
 	}
 }
 
-func (m *Manager) CreateAccessToken(userID string) (string, error) {
+func (m *Manager) CreateAccessToken(userID string) (AccessToken, error) {
 	claim := newClaims(
 		userID,
 		m.accessName,
@@ -65,7 +66,12 @@ func (m *Manager) CreateAccessToken(userID string) (string, error) {
 
 	token := jwt.NewWithClaims(jwt.SigningMethodRS256, claim)
 
-	return token.SignedString(m.config.PrivateKey)
+	accessToken, err := token.SignedString(m.config.PrivateKey)
+	if err != nil {
+		return AccessToken(accessToken), err
+	}
+
+	return AccessToken(accessToken), nil
 }
 
 func (m *Manager) Parse(tokenString string) (*Claims, error) {
@@ -105,4 +111,8 @@ func (_ *Manager) GenerateRefreshToken() (RefreshToken, error) {
 func (_ *Manager) HashToken(refreshToken RefreshToken) string {
 	hash := sha256.Sum256([]byte(refreshToken))
 	return hex.EncodeToString(hash[:])
+}
+
+func (m *Manager) RefreshTokenExpiresAt() time.Time {
+	return time.Now().Add(time.Duration(m.config.RefreshExpiresMinutes) * time.Hour)
 }

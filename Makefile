@@ -19,6 +19,9 @@ MIGRATIONS_DIR := db/migrations
 MIGRATION_DB_PORT ?= 5433
 DATABASE_URL = postgres://$(POSTGRES_USER):$(POSTGRES_PASSWORD)@$(MIGRATION_DB_HOST):$(MIGRATION_DB_PORT)/$(POSTGRES_DB)?sslmode=disable
 
+# JWT
+PRIVATE_KEY=./secrets/private.pem
+PUBLIC_KEY=./secrets/public.pem
 
 .DEFAULT_GOAL := help
 
@@ -26,7 +29,7 @@ DATABASE_URL = postgres://$(POSTGRES_USER):$(POSTGRES_PASSWORD)@$(MIGRATION_DB_H
 .PHONY: help run
 
 # Generation
-.PHONY: env-gen api-v1gen sql-gen
+.PHONY: env-gen api-v1gen sql-gen jwt-gen
 
 # Docker
 .PHONY: docker-build docker-run docker-stop docker-down docker-clean
@@ -49,10 +52,22 @@ help:
 	@echo "  make docker-down  - remove the Docker container"
 	@echo "  make docker-clean - remove Docker resources and build cache"
 
-env:
+env-gen:
 	@if [ ! -f $(ENV_FILE) ]; then \
 		echo "Creating .env from .env.example"; \
 		cp $(ENV_EXAMPLE) $(ENV_FILE); \
+	fi
+
+# Генерирует JWT RSA ключи, если они отсутствуют
+jwt-gen:
+	@if [ -f $(PRIVATE_KEY) ] && [ -f $(PUBLIC_KEY) ]; then \
+		echo "JWT keys already exist. Skipping generation."; \
+	else \
+		echo "Generating JWT RS256 keys..."; \
+		mkdir -p secrets; \
+		openssl genrsa -out $(PRIVATE_KEY) 2048; \
+		openssl rsa -in $(PRIVATE_KEY) -pubout -out $(PUBLIC_KEY); \
+		echo "JWT keys generated in ./secrets"; \
 	fi
 
 api-v1gen:

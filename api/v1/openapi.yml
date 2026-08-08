@@ -15,6 +15,12 @@ components:
 
   schemas:
 
+    securitySchemes:
+      BearerAuth:
+        type: http
+        scheme: bearer
+        bearerFormat: JWT
+
     RegisterUserRequest:
       type: object
       required: [username, email, password, confirmation]
@@ -61,11 +67,13 @@ components:
         username:
           type: string
 
-    Token:
+    TokensResponse:
       type: object
-      required: [access_token]
+      required: [access_token, refresh_token]
       properties:
         access_token:
+          type: string
+        refresh_token:
           type: string
 
     ErrorResponse:
@@ -182,7 +190,7 @@ paths:
           content:
             application/json:
               schema:
-                 $ref: '#/components/schemas/Token'
+                 $ref: '#/components/schemas/TokensResponse'
 
         '400':
             description: Неверный запрос

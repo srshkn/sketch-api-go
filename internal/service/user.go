@@ -27,16 +27,13 @@ func (u *UserService) validateCreateUser(
 	userRow v1Generated.RegisterUserRequest,
 ) error {
 	emailUser := strings.ToLower(string(userRow.Email))
-	user, err := u.repository.GetUserByEmailOrUsername(
+	user, _ := u.repository.GetUserByEmailOrUsername(
 		ctx,
 		db.GetUserByEmailOrUsernameParams{
 			Username: userRow.Username,
 			Lower:    emailUser,
 		},
 	)
-	if err != nil {
-		return err
-	}
 
 	if emailUser == user.Email {
 		return errors.New("пользователь с такой почтой уже существует")

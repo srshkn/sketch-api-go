@@ -53,11 +53,10 @@ func (a *AuthHandler) LoginUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	req, err := a.service.Login(r.Context(), v1Generated.LoginUserRequest{
+	accessToken, refreshToken, err := a.service.Login(r.Context(), v1Generated.LoginUserRequest{
 		Email:    request.Email,
 		Password: request.Password,
 	})
-
 	if err != nil {
 		slog.Error(
 			"user registration failed",
@@ -73,10 +72,20 @@ func (a *AuthHandler) LoginUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	response := v1Generated.UserResponse{
-		Id:       req.ID,
-		Username: req.Username,
+	response := v1Generated.TokensResponse{
+		AccessToken:  string(accessToken),
+		RefreshToken: string(refreshToken),
 	}
+
+	http.SetCookie(w, &http.Cookie{
+		Name:     "refresh_token",
+		Value:    string(refreshToken),
+		Path:     "/auth",
+		HttpOnly: true,
+		Secure:   false, // локально без HTTPS
+		SameSite: http.SameSiteStrictMode,
+		MaxAge:   60 * 60 * 24 * 30,
+	})
 
 	writeJSON(w, http.StatusOK, response)
 

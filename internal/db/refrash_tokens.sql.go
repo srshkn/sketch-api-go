@@ -7,9 +7,9 @@ package db
 
 import (
 	"context"
+	"time"
 
 	"github.com/google/uuid"
-	"github.com/jackc/pgx/v5/pgtype"
 )
 
 const createRefreshToken = `-- name: CreateRefreshToken :one
@@ -23,9 +23,9 @@ RETURNING id
 `
 
 type CreateRefreshTokenParams struct {
-	UserID    uuid.UUID          `json:"user_id"`
-	TokenHash string             `json:"token_hash"`
-	ExpiresAt pgtype.Timestamptz `json:"expires_at"`
+	UserID    uuid.UUID `json:"user_id"`
+	TokenHash string    `json:"token_hash"`
+	ExpiresAt time.Time `json:"expires_at"`
 }
 
 func (q *Queries) CreateRefreshToken(ctx context.Context, arg CreateRefreshTokenParams) (uuid.UUID, error) {
@@ -86,11 +86,11 @@ ORDER BY created_at DESC
 `
 
 type GetTokenUserIDRow struct {
-	ID        uuid.UUID          `json:"id"`
-	TokenHash string             `json:"token_hash"`
-	CreatedAt pgtype.Timestamptz `json:"created_at"`
-	ExpiresAt pgtype.Timestamptz `json:"expires_at"`
-	Revoked   bool               `json:"revoked"`
+	ID        uuid.UUID `json:"id"`
+	TokenHash string    `json:"token_hash"`
+	CreatedAt time.Time `json:"created_at"`
+	ExpiresAt time.Time `json:"expires_at"`
+	Revoked   bool      `json:"revoked"`
 }
 
 func (q *Queries) GetTokenUserID(ctx context.Context, userID uuid.UUID) (GetTokenUserIDRow, error) {

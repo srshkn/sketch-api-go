@@ -67,9 +67,10 @@ type RegisterUserRequest struct {
 	Username     string              `json:"username"`
 }
 
-// Token defines model for Token.
-type Token struct {
-	AccessToken string `json:"access_token"`
+// TokensResponse defines model for TokensResponse.
+type TokensResponse struct {
+	AccessToken  string `json:"access_token"`
+	RefreshToken string `json:"refresh_token"`
 }
 
 // UserResponse defines model for UserResponse.
