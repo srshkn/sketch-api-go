@@ -12,6 +12,7 @@ type Config struct {
 	Server   ServerConfig
 	Logger   LoggerConfig
 	Postgres PostgresConfig
+	Token    JWTConfig
 }
 
 func New() (*Config, error) {
@@ -34,10 +35,16 @@ func New() (*Config, error) {
 		return nil, err
 	}
 
+	jwtCinfig, err := newJWTConfig()
+	if err != nil {
+		return nil, err
+	}
+
 	config := Config{
 		Server:   serverConfig,
 		Logger:   loggerConfig,
 		Postgres: postgresConfig,
+		Token:    jwtCinfig,
 	}
 
 	return &config, nil
