@@ -114,5 +114,5 @@ func (_ *Manager) HashToken(refreshToken RefreshToken) string {
 }
 
 func (m *Manager) RefreshTokenExpiresAt() time.Time {
-	return time.Now().Add(time.Duration(m.config.RefreshExpiresMinutes) * time.Hour)
+	return time.Now().Add(time.Duration(m.config.RefreshExpiresMinutes) * 24 * time.Hour)
 }

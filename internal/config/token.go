@@ -10,13 +10,13 @@ import (
 )
 
 const (
-	pathPrivatKeyEnv         string = "JWT_PATH_PRIVATE_KEY"
-	pathPublicKeyEnv         string = "JWT_PATH_PUBLIC_KEY"
-	accessExpiresMinutesEnv  string = "ACCESS_EXPIRES_MINUTES"
-	refreshExpiresMinutesEnv string = "REFRESH_EXPIRES_MINUTES"
-	refreshCookieNameEnv     string = "REFRESH_COOKIE_NAME"
-	issuerEnv                string = "JWT_ISSUER"
-	audienceEnv              string = "JWT_AUDIENCE"
+	pathPrivatKeyEnv        string = "JWT_PATH_PRIVATE_KEY"
+	pathPublicKeyEnv        string = "JWT_PATH_PUBLIC_KEY"
+	accessExpiresMinutesEnv string = "ACCESS_EXPIRES_MINUTES"
+	refreshExpiresDaysEnv   string = "REFRESH_EXPIRES_DAYS"
+	refreshCookieNameEnv    string = "REFRESH_COOKIE_NAME"
+	issuerEnv               string = "JWT_ISSUER"
+	audienceEnv             string = "JWT_AUDIENCE"
 )
 
 type JWTConfig struct {
@@ -170,24 +170,24 @@ func (j *JWTConfig) loadMinutes() error {
 		)
 	}
 
-	refreshExpiresMinutes, err := strconv.Atoi(os.Getenv(refreshExpiresMinutesEnv))
+	refreshExpiresDays, err := strconv.Atoi(os.Getenv(refreshExpiresDaysEnv))
 	if err != nil {
 		return fmt.Errorf(
 			"environment variable %q must be a number: %w",
-			refreshExpiresMinutesEnv,
+			refreshExpiresDaysEnv,
 			err,
 		)
 	}
 
-	if refreshExpiresMinutes <= 0 {
+	if refreshExpiresDays <= 0 {
 		return fmt.Errorf(
 			"environment variable %q must be greater than 0",
-			refreshExpiresMinutesEnv,
+			refreshExpiresDaysEnv,
 		)
 	}
 
 	j.AccessExpiresMinutes = accessExpiresMinutes
-	j.RefreshExpiresMinutes = refreshExpiresMinutes
+	j.RefreshExpiresMinutes = refreshExpiresDays
 
 	return nil
 }
