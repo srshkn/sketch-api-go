@@ -61,6 +61,13 @@ components:
         username:
           type: string
 
+    Token:
+      type: object
+      required: [access_token]
+      properties:
+        access_token:
+          type: string
+
     ErrorResponse:
       type: object
       required: [error]
@@ -175,7 +182,7 @@ paths:
           content:
             application/json:
               schema:
-                 $ref: '#/components/schemas/UserResponse'
+                 $ref: '#/components/schemas/Token'
 
         '400':
             description: Неверный запрос

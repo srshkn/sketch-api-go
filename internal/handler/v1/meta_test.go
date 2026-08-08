@@ -1,4 +1,4 @@
-package handler
+package v1
 
 import (
 	"net/http"
@@ -9,7 +9,7 @@ import (
 )
 
 func TestGetHealth(t *testing.T) {
-	handlerMeta := New(NewMetaHandler(), nil)
+	handlerMeta := New(NewMetaHandler(), nil, nil)
 	router := v1Generated.HandlerFromMux(handlerMeta, http.NewServeMux())
 	request := httptest.NewRequest(http.MethodGet, "/health", nil)
 	response := httptest.NewRecorder()

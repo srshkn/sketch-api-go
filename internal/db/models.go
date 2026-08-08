@@ -6,11 +6,21 @@ package db
 
 import (
 	"github.com/google/uuid"
+	"github.com/jackc/pgx/v5/pgtype"
 )
+
+type RefreshToken struct {
+	ID        uuid.UUID          `json:"id"`
+	UserID    uuid.UUID          `json:"user_id"`
+	TokenHash string             `json:"token_hash"`
+	CreatedAt pgtype.Timestamptz `json:"created_at"`
+	ExpiresAt pgtype.Timestamptz `json:"expires_at"`
+	Revoked   bool               `json:"revoked"`
+}
 
 type User struct {
 	ID           uuid.UUID `json:"id"`
-	Name         string    `json:"name"`
+	Username     string    `json:"username"`
 	PasswordHash string    `json:"password_hash"`
 	Email        string    `json:"email"`
 }

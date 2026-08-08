@@ -67,6 +67,11 @@ type RegisterUserRequest struct {
 	Username     string              `json:"username"`
 }
 
+// Token defines model for Token.
+type Token struct {
+	AccessToken string `json:"access_token"`
+}
+
 // UserResponse defines model for UserResponse.
 type UserResponse struct {
 	Id       openapi_types.UUID `json:"id"`

@@ -29,11 +29,18 @@ func New(cfg config.ServerConfig, logger *slog.Logger, db db.Querier) *ServerApp
 	mux := http.NewServeMux()
 
 	userService := service.NewUserService(db)
+	authService := service.NewAuthService(db)
 
 	v1MetaHandler := v1Handler.NewMetaHandler()
 	v1UserHandler := v1Handler.NewUserHandler(userService)
+	v1AuthHandler := v1Handler.NewAuthHandler(authService)
 
-	v1APIHandler := v1Handler.New(v1MetaHandler, v1UserHandler)
+	v1APIHandler := v1Handler.New(
+		v1MetaHandler,
+		v1UserHandler,
+		v1AuthHandler,
+	)
+
 	v1Generated.HandlerWithOptions(
 		v1APIHandler,
 		v1Generated.StdHTTPServerOptions{

@@ -1,4 +1,4 @@
-package handler
+package v1
 
 import (
 	"context"
@@ -36,7 +36,7 @@ func (s userRepositoryStub) CreateUser(
 func newUserTestRouter(repo repository.UserRepository) http.Handler {
 	userService := service.NewUserService(repo)
 	userHandler := NewUserHandler(userService)
-	handler := New(NewMetaHandler(), userHandler)
+	handler := New(NewMetaHandler(), userHandler, nil)
 
 	return v1Generated.HandlerFromMux(handler,
 		http.NewServeMux())
@@ -50,8 +50,8 @@ func TestRegisterUser(t *testing.T) {
 			ctx context.Context,
 			params db.CreateUserParams,
 		) (db.CreateUserRow, error) {
-			if params.Name != "Alice" {
-				t.Errorf("name = %q, want %q", params.Name, "Alice")
+			if params.Username != "Alice" {
+				t.Errorf("name = %q, want %q", params.Username, "Alice")
 			}
 
 			if params.Email != "alice@example.com" {
@@ -63,9 +63,9 @@ func TestRegisterUser(t *testing.T) {
 			}
 
 			return db.CreateUserRow{
-				ID:    wantID,
-				Name:  params.Name,
-				Email: params.Email,
+				ID:       wantID,
+				Username: params.Username,
+				Email:    params.Email,
 			}, nil
 		},
 	}

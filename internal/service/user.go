@@ -3,6 +3,7 @@ package service
 import (
 	"context"
 	"errors"
+	"strings"
 
 	"sketch-api-go/internal/db"
 	"sketch-api-go/internal/password"
@@ -21,11 +22,42 @@ func NewUserService(user repository.UserRepository) *UserService {
 	}
 }
 
+func (u *UserService) validateCreateUser(
+	ctx context.Context,
+	userRow v1Generated.RegisterUserRequest,
+) error {
+	emailUser := strings.ToLower(string(userRow.Email))
+	user, err := u.repository.GetUserByEmailOrUsername(
+		ctx,
+		db.GetUserByEmailOrUsernameParams{
+			Username: userRow.Username,
+			Lower:    emailUser,
+		},
+	)
+	if err != nil {
+		return err
+	}
+
+	if emailUser == user.Email {
+		return errors.New("пользователь с такой почтой уже существует")
+	}
+
+	if userRow.Username == user.Username {
+		return errors.New("пользователь с таким именем уже существует")
+	}
+
+	return nil
+}
+
 func (u *UserService) Registration(
 	ctx context.Context,
 	request v1Generated.RegisterUserRequest,
 ) (db.CreateUserRow, error) {
 	var createUser db.CreateUserRow
+
+	if err := u.validateCreateUser(ctx, request); err != nil {
+		return createUser, err
+	}
 
 	hash, err := password.Hash(request.Password)
 	if err != nil {
@@ -33,8 +65,8 @@ func (u *UserService) Registration(
 	}
 
 	user := db.CreateUserParams{
-		Name:         request.Username,
-		Email:        string(request.Email),
+		Username:     request.Username,
+		Email:        strings.ToLower(string(request.Email)),
 		PasswordHash: hash,
 	}
 
@@ -44,23 +76,4 @@ func (u *UserService) Registration(
 	}
 
 	return createUser, nil
-}
-
-func (u *UserService) Login(
-	ctx context.Context,
-	request v1Generated.LoginUserRequest,
-) (db.GetUserByEmailRow, error) {
-
-	user, err := u.repository.GetUserByEmail(ctx, string(request.Email))
-	if err != nil {
-		return user, err
-	}
-
-	if flag, err := password.Compare(request.Password, user.PasswordHash); !flag {
-		return user, errors.New("неверный пароль")
-	} else if err != nil {
-		return user, err
-	}
-
-	return user, nil
 }

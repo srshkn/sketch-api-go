@@ -4,28 +4,24 @@ import (
 	"encoding/json"
 	"log/slog"
 	"net/http"
-	"strings"
 
 	"sketch-api-go/internal/service"
 
 	v1Generated "sketch-api-go/internal/generated/v1"
 )
 
-type UserHandler struct {
-	service *service.UserService
+type AuthHandler struct {
+	service *service.AuthService
 }
 
-func NewUserHandler(service *service.UserService) *UserHandler {
-	return &UserHandler{
+func NewAuthHandler(service *service.AuthService) *AuthHandler {
+	return &AuthHandler{
 		service: service,
 	}
 }
 
-func (u *UserHandler) RegisterUser(
-	w http.ResponseWriter,
-	r *http.Request,
-) {
-	var request v1Generated.RegisterUserRequest
+func (a *AuthHandler) LoginUser(w http.ResponseWriter, r *http.Request) {
+	var request v1Generated.LoginUserJSONRequestBody
 
 	if err := json.NewDecoder(r.Body).Decode(&request); err != nil {
 		writeError(
@@ -37,9 +33,7 @@ func (u *UserHandler) RegisterUser(
 		return
 	}
 
-	request.Username = strings.TrimSpace(request.Username)
-
-	if request.Username == "" {
+	if request.Email == "" {
 		writeError(
 			w,
 			http.StatusBadRequest,
@@ -59,12 +53,11 @@ func (u *UserHandler) RegisterUser(
 		return
 	}
 
-	req, err := u.service.Registration(r.Context(), v1Generated.RegisterUserRequest{
-		Confirmation: request.Confirmation,
-		Email:        request.Email,
-		Password:     request.Password,
-		Username:     request.Username,
+	req, err := a.service.Login(r.Context(), v1Generated.LoginUserRequest{
+		Email:    request.Email,
+		Password: request.Password,
 	})
+
 	if err != nil {
 		slog.Error(
 			"user registration failed",
@@ -85,5 +78,6 @@ func (u *UserHandler) RegisterUser(
 		Username: req.Username,
 	}
 
-	writeJSON(w, http.StatusCreated, response)
+	writeJSON(w, http.StatusOK, response)
+
 }

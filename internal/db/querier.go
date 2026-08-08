@@ -11,11 +11,14 @@ import (
 )
 
 type Querier interface {
-	ByEmail(ctx context.Context, lower string) (ByEmailRow, error)
-	ByName(ctx context.Context, name string) (ByNameRow, error)
+	CreateRefreshToken(ctx context.Context, arg CreateRefreshTokenParams) (uuid.UUID, error)
 	CreateUser(ctx context.Context, arg CreateUserParams) (CreateUserRow, error)
+	DeleteTokenHash(ctx context.Context, tokenHash string) error
 	DeleteUser(ctx context.Context, id uuid.UUID) error
+	GetTokenHash(ctx context.Context, tokenHash string) (RefreshToken, error)
+	GetTokenUserID(ctx context.Context, userID uuid.UUID) (GetTokenUserIDRow, error)
 	GetUserByEmail(ctx context.Context, lower string) (GetUserByEmailRow, error)
+	GetUserByEmailOrUsername(ctx context.Context, arg GetUserByEmailOrUsernameParams) (GetUserByEmailOrUsernameRow, error)
 	ListUsers(ctx context.Context) ([]ListUsersRow, error)
 }
 

@@ -11,68 +11,36 @@ import (
 	"github.com/google/uuid"
 )
 
-const byEmail = `-- name: ByEmail :one
-SELECT id, email
-FROM users
-WHERE LOWER(email) = LOWER($1)
-`
-
-type ByEmailRow struct {
-	ID    uuid.UUID `json:"id"`
-	Email string    `json:"email"`
-}
-
-func (q *Queries) ByEmail(ctx context.Context, lower string) (ByEmailRow, error) {
-	row := q.db.QueryRow(ctx, byEmail, lower)
-	var i ByEmailRow
-	err := row.Scan(&i.ID, &i.Email)
-	return i, err
-}
-
-const byName = `-- name: ByName :one
-SELECT id, name
-FROM users
-WHERE name = $1
-`
-
-type ByNameRow struct {
-	ID   uuid.UUID `json:"id"`
-	Name string    `json:"name"`
-}
-
-func (q *Queries) ByName(ctx context.Context, name string) (ByNameRow, error) {
-	row := q.db.QueryRow(ctx, byName, name)
-	var i ByNameRow
-	err := row.Scan(&i.ID, &i.Name)
-	return i, err
-}
-
 const createUser = `-- name: CreateUser :one
 INSERT INTO users (
-    name,
+    username,
     email,
     password_hash
 )
-VALUES ($1, $2, $3)
-RETURNING id, name, email
+VALUES (
+    $1,
+    $2,
+    $3
+)
+RETURNING id, username, email
 `
 
 type CreateUserParams struct {
-	Name         string `json:"name"`
+	Username     string `json:"username"`
 	Email        string `json:"email"`
 	PasswordHash string `json:"password_hash"`
 }
 
 type CreateUserRow struct {
-	ID    uuid.UUID `json:"id"`
-	Name  string    `json:"name"`
-	Email string    `json:"email"`
+	ID       uuid.UUID `json:"id"`
+	Username string    `json:"username"`
+	Email    string    `json:"email"`
 }
 
 func (q *Queries) CreateUser(ctx context.Context, arg CreateUserParams) (CreateUserRow, error) {
-	row := q.db.QueryRow(ctx, createUser, arg.Name, arg.Email, arg.PasswordHash)
+	row := q.db.QueryRow(ctx, createUser, arg.Username, arg.Email, arg.PasswordHash)
 	var i CreateUserRow
-	err := row.Scan(&i.ID, &i.Name, &i.Email)
+	err := row.Scan(&i.ID, &i.Username, &i.Email)
 	return i, err
 }
 
@@ -87,14 +55,14 @@ func (q *Queries) DeleteUser(ctx context.Context, id uuid.UUID) error {
 }
 
 const getUserByEmail = `-- name: GetUserByEmail :one
-SELECT id, name, email, password_hash
+SELECT id, username, email, password_hash
 FROM users
 WHERE LOWER(email) = LOWER($1)
 `
 
 type GetUserByEmailRow struct {
 	ID           uuid.UUID `json:"id"`
-	Name         string    `json:"name"`
+	Username     string    `json:"username"`
 	Email        string    `json:"email"`
 	PasswordHash string    `json:"password_hash"`
 }
@@ -104,23 +72,48 @@ func (q *Queries) GetUserByEmail(ctx context.Context, lower string) (GetUserByEm
 	var i GetUserByEmailRow
 	err := row.Scan(
 		&i.ID,
-		&i.Name,
+		&i.Username,
 		&i.Email,
 		&i.PasswordHash,
 	)
 	return i, err
 }
 
-const listUsers = `-- name: ListUsers :many
-SELECT id, name, email
+const getUserByEmailOrUsername = `-- name: GetUserByEmailOrUsername :one
+SELECT id, username, email
 FROM users
-ORDER BY name
+WHERE username = $1 OR LOWER(email) = LOWER($2)
+LIMIT 1
+`
+
+type GetUserByEmailOrUsernameParams struct {
+	Username string `json:"username"`
+	Lower    string `json:"lower"`
+}
+
+type GetUserByEmailOrUsernameRow struct {
+	ID       uuid.UUID `json:"id"`
+	Username string    `json:"username"`
+	Email    string    `json:"email"`
+}
+
+func (q *Queries) GetUserByEmailOrUsername(ctx context.Context, arg GetUserByEmailOrUsernameParams) (GetUserByEmailOrUsernameRow, error) {
+	row := q.db.QueryRow(ctx, getUserByEmailOrUsername, arg.Username, arg.Lower)
+	var i GetUserByEmailOrUsernameRow
+	err := row.Scan(&i.ID, &i.Username, &i.Email)
+	return i, err
+}
+
+const listUsers = `-- name: ListUsers :many
+SELECT id, username, email
+FROM users
+ORDER BY username
 `
 
 type ListUsersRow struct {
-	ID    uuid.UUID `json:"id"`
-	Name  string    `json:"name"`
-	Email string    `json:"email"`
+	ID       uuid.UUID `json:"id"`
+	Username string    `json:"username"`
+	Email    string    `json:"email"`
 }
 
 func (q *Queries) ListUsers(ctx context.Context) ([]ListUsersRow, error) {
@@ -132,7 +125,7 @@ func (q *Queries) ListUsers(ctx context.Context) ([]ListUsersRow, error) {
 	items := []ListUsersRow{}
 	for rows.Next() {
 		var i ListUsersRow
-		if err := rows.Scan(&i.ID, &i.Name, &i.Email); err != nil {
+		if err := rows.Scan(&i.ID, &i.Username, &i.Email); err != nil {
 			return nil, err
 		}
 		items = append(items, i)

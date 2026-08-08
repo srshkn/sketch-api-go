@@ -1,4 +1,4 @@
-package jwt
+package token
 
 import (
 	"crypto/rand"
@@ -12,9 +12,11 @@ import (
 	"github.com/golang-jwt/jwt/v5"
 )
 
+type RefreshToken string
+
 const (
-	AccessToken  = "access"
-	RefreshToken = "refresh"
+	Access  string = "access"
+	Refresh string = "refresh"
 )
 
 type Claims struct {
@@ -38,12 +40,12 @@ func newClaims(userID, tokenType string) *Claims {
 	}
 }
 
-type TokenManager struct {
+type Manager struct {
 	privateKey *rsa.PrivateKey
 	publicKey  *rsa.PublicKey
 }
 
-func NewTokenManager(privatePEM, publicPEM []byte) (*TokenManager, error) {
+func NewTokenManager(privatePEM, publicPEM []byte) (*Manager, error) {
 	privateKey, err := jwt.ParseRSAPrivateKeyFromPEM(privatePEM)
 	if err != nil {
 		return nil, err
@@ -54,21 +56,21 @@ func NewTokenManager(privatePEM, publicPEM []byte) (*TokenManager, error) {
 		return nil, err
 	}
 
-	return &TokenManager{
+	return &Manager{
 		privateKey: privateKey,
 		publicKey:  publicKey,
 	}, nil
 }
 
-func (t *TokenManager) CreateAccessToken(userID string) (string, error) {
-	claim := newClaims(userID, AccessToken)
+func (m *Manager) CreateAccessToken(userID string) (string, error) {
+	claim := newClaims(userID, Access)
 
 	token := jwt.NewWithClaims(jwt.SigningMethodRS256, claim)
 
-	return token.SignedString(t.privateKey)
+	return token.SignedString(m.privateKey)
 }
 
-func (t *TokenManager) Parse(tokenString string) (*Claims, error) {
+func (m *Manager) Parse(tokenString string) (*Claims, error) {
 	token, err := jwt.ParseWithClaims(
 		tokenString,
 		&Claims{},
@@ -76,7 +78,7 @@ func (t *TokenManager) Parse(tokenString string) (*Claims, error) {
 			if _, ok := token.Method.(*jwt.SigningMethodRSA); !ok {
 				return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
 			}
-			return t.publicKey, nil
+			return m.publicKey, nil
 		},
 	)
 
@@ -92,17 +94,17 @@ func (t *TokenManager) Parse(tokenString string) (*Claims, error) {
 	return claims, nil
 }
 
-func (t *TokenManager) GenerateRefreshToken() (string, error) {
+func (_ *Manager) GenerateRefreshToken() (RefreshToken, error) {
 	bytes := make([]byte, 48)
 
 	if _, err := rand.Read(bytes); err != nil {
 		return "", fmt.Errorf("failed to generate refresh token: %w", err)
 	}
 
-	return base64.RawURLEncoding.EncodeToString(bytes), nil
+	return RefreshToken(base64.RawURLEncoding.EncodeToString(bytes)), nil
 }
 
-func (t *TokenManager) HashToken(refreshToken string) string {
+func (_ *Manager) HashToken(refreshToken RefreshToken) string {
 	hash := sha256.Sum256([]byte(refreshToken))
 	return hex.EncodeToString(hash[:])
 }
