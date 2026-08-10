@@ -108,7 +108,7 @@ compose-dev:
 		up --build
 
 compose-clean:
-	$(COMPOSE) down -v
+	$(COMPOSE) -f compose.yml -f infra/compose/dev.yml down -v --remove-orphans
 	docker builder prune -af
 
 
