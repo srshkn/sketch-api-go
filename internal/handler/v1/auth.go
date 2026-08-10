@@ -21,7 +21,7 @@ func NewAuthHandler(service *service.AuthService) *AuthHandler {
 }
 
 func (a *AuthHandler) LoginUser(w http.ResponseWriter, r *http.Request) {
-	var request v1Generated.LoginUserJSONRequestBody
+	var request v1Generated.LoginUserRequest
 
 	if err := json.NewDecoder(r.Body).Decode(&request); err != nil {
 		writeError(
@@ -53,10 +53,7 @@ func (a *AuthHandler) LoginUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	accessToken, refreshToken, err := a.service.Login(r.Context(), v1Generated.LoginUserRequest{
-		Email:    request.Email,
-		Password: request.Password,
-	})
+	accessToken, refreshToken, err := a.service.Login(r.Context(), request)
 	if err != nil {
 		slog.Error(
 			"user registration failed",
@@ -88,5 +85,61 @@ func (a *AuthHandler) LoginUser(w http.ResponseWriter, r *http.Request) {
 	})
 
 	writeJSON(w, http.StatusOK, response)
+}
 
+func (a *AuthHandler) UpdateRefreshToken(w http.ResponseWriter, r *http.Request) {
+	var request v1Generated.RefreshRequest
+
+	if err := json.NewDecoder(r.Body).Decode(&request); err != nil {
+		writeError(
+			w,
+			http.StatusBadRequest,
+			v1Generated.INVALIDREQUEST,
+			"invalid request body",
+		)
+		return
+	}
+
+	if request.RefreshToken == "" {
+		writeError(
+			w,
+			http.StatusBadRequest,
+			v1Generated.INVALIDREQUEST,
+			"name must not be empty",
+		)
+		return
+	}
+
+	accessToken, refreshToken, err := a.service.Refresh(r.Context(), request)
+	if err != nil {
+		slog.Error(
+			"user registration failed",
+			slog.Any("error", err),
+		)
+
+		writeError(
+			w,
+			http.StatusBadRequest,
+			v1Generated.INVALIDREQUEST,
+			"...",
+		)
+		return
+	}
+
+	response := v1Generated.TokensResponse{
+		AccessToken:  string(accessToken),
+		RefreshToken: string(refreshToken),
+	}
+
+	http.SetCookie(w, &http.Cookie{
+		Name:     "refresh_token",
+		Value:    string(refreshToken),
+		Path:     "/auth",
+		HttpOnly: true,
+		Secure:   false, // локально без HTTPS
+		SameSite: http.SameSiteStrictMode,
+		MaxAge:   60 * 60 * 24 * 30,
+	})
+
+	writeJSON(w, http.StatusOK, response)
 }

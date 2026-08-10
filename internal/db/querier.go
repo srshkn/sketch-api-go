@@ -19,6 +19,7 @@ type Querier interface {
 	GetTokenUserID(ctx context.Context, userID uuid.UUID) (GetTokenUserIDRow, error)
 	GetUserByEmail(ctx context.Context, lower string) (GetUserByEmailRow, error)
 	GetUserByEmailOrUsername(ctx context.Context, arg GetUserByEmailOrUsernameParams) (GetUserByEmailOrUsernameRow, error)
+	GetUserByID(ctx context.Context, id uuid.UUID) (GetUserByIDRow, error)
 	ListUsers(ctx context.Context) ([]ListUsersRow, error)
 }
 

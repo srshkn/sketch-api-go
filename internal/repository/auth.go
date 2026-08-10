@@ -14,4 +14,5 @@ type AuthRepository interface {
 	DeleteTokenHash(ctx context.Context, tokenHash string) error
 	GetTokenHash(ctx context.Context, tokenHash string) (db.RefreshToken, error)
 	GetTokenUserID(ctx context.Context, userID uuid.UUID) (db.GetTokenUserIDRow, error)
+	GetUserByID(ctx context.Context, id uuid.UUID) (db.GetUserByIDRow, error)
 }

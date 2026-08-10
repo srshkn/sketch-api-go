@@ -35,6 +35,10 @@ func (h *Handler) RegisterUser(w http.ResponseWriter, r *http.Request) {
 	h.user.RegisterUser(w, r)
 }
 
+func (h *Handler) UpdateRefreshToken(w http.ResponseWriter, r *http.Request) {
+	h.auth.UpdateRefreshToken(w, r)
+}
+
 func writeJSON(
 	w http.ResponseWriter,
 	status int,
