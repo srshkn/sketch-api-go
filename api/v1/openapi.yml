@@ -10,16 +10,23 @@ servers:
 tags:
   - name: Meta
   - name: User
+  - name: Auth
 
 components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
 
   schemas:
 
-    securitySchemes:
-      BearerAuth:
-        type: http
-        scheme: bearer
-        bearerFormat: JWT
+    RefreshRequest:
+      type: object
+      required: [refresh_token]
+      properties:
+        refresh_token:
+          type: string
 
     RegisterUserRequest:
       type: object
@@ -171,9 +178,9 @@ paths:
             application/json:
               schema: { $ref: '#/components/schemas/InternalErrorResponse' }
 
-  /user/login:
+  /auth/login:
     post:
-      tags: [User]
+      tags: [Auth]
       summary: "Аутентификация пользователя."
       description: "..."
       operationId: loginUser
@@ -183,6 +190,48 @@ paths:
           application/json:
             schema:
               $ref: '#/components/schemas/LoginUserRequest'
+
+      responses:
+        '200':
+          description: Пользователь вошёл
+          content:
+            application/json:
+              schema:
+                 $ref: '#/components/schemas/TokensResponse'
+
+        '400':
+            description: Неверный запрос
+            content:
+              application/json:
+                schema: { $ref: '#/components/schemas/ErrorResponse' }
+
+        '409':
+          description: Пользователя не существует
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+        '500':
+          description: Внутренняя ошибка сервера
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/InternalErrorResponse' }
+
+  /auth/refresh:
+    post:
+      security:
+        - BearerAuth: []
+      tags: [Auth]
+      summary: "Обновление рефреш токена."
+      description: "..."
+      operationId: updateRefreshToken
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RefreshRequest'
 
       responses:
         '200':
