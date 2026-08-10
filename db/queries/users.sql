@@ -22,6 +22,11 @@ FROM users
 WHERE username = $1 OR LOWER(email) = LOWER($2)
 LIMIT 1;
 
+-- name: GetUserByID :one
+SELECT id, username, email
+FROM users
+WHERE id = $1;
+
 -- name: ListUsers :many
 SELECT id, username, email
 FROM users
