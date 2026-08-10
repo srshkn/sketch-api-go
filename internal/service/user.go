@@ -10,6 +10,8 @@ import (
 	"sketch-api-go/internal/repository"
 
 	v1Generated "sketch-api-go/internal/generated/v1"
+
+	"github.com/google/uuid"
 )
 
 type UserService struct {
@@ -73,4 +75,20 @@ func (u *UserService) Registration(
 	}
 
 	return createUser, nil
+}
+
+func (u *UserService) GetUser(ctx context.Context, rowUserID string) (db.GetUserByIDRow, error) {
+	var user db.GetUserByIDRow
+
+	userID, err := uuid.Parse(rowUserID)
+	if err != nil {
+		return user, err
+	}
+
+	user, err = u.repository.GetUserByID(ctx, uuid.UUID(userID))
+	if err != nil {
+		return user, err
+	}
+
+	return user, nil
 }

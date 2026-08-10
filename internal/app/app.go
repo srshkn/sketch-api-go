@@ -54,6 +54,7 @@ func New(
 			BaseURL:    "/api/v1",
 			Middlewares: []v1Generated.MiddlewareFunc{
 				middleware.Logging(logger),
+				middleware.AuthMiddleware(jwtManager),
 			},
 		},
 	)

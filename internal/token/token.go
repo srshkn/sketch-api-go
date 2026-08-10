@@ -74,7 +74,7 @@ func (m *Manager) CreateAccessToken(userID string) (AccessToken, error) {
 	return AccessToken(accessToken), nil
 }
 
-func (m *Manager) Parse(tokenString string) (*Claims, error) {
+func (m *Manager) ValidateAccessToken(tokenString string) (*Claims, error) {
 	token, err := jwt.ParseWithClaims(
 		tokenString,
 		&Claims{},

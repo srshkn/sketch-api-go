@@ -123,6 +123,7 @@ paths:
         Endpoint предназначен для проверки работоспособности API.
         Возвращает "OK" и статус 200, если сервис жив.
       operationId: getHealth
+
       responses:
         "200":
           description: API работает корректно
@@ -178,6 +179,29 @@ paths:
             application/json:
               schema: { $ref: '#/components/schemas/InternalErrorResponse' }
 
+  /user/me:
+    get:
+      security:
+        - BearerAuth: []
+      tags: [User]
+      summary: "Информация о пользователе."
+      description: "..."
+      operationId: getMe
+
+      responses:
+        '200':
+          description: Информация о пользователе
+          content:
+            application/json:
+              schema:
+                 $ref: '#/components/schemas/UserResponse'
+
+        '500':
+          description: Внутренняя ошибка сервера
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/InternalErrorResponse' }
+
   /auth/login:
     post:
       tags: [Auth]
@@ -220,8 +244,6 @@ paths:
 
   /auth/refresh:
     post:
-      security:
-        - BearerAuth: []
       tags: [Auth]
       summary: "Обновление рефреш токена."
       description: "..."

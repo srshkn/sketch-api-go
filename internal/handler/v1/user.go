@@ -11,6 +11,10 @@ import (
 	v1Generated "sketch-api-go/internal/generated/v1"
 )
 
+const (
+	userIDKey string = "user_id"
+)
+
 type UserHandler struct {
 	service *service.UserService
 }
@@ -83,6 +87,37 @@ func (u *UserHandler) RegisterUser(
 	response := v1Generated.UserResponse{
 		Id:       req.ID,
 		Username: req.Username,
+	}
+
+	writeJSON(w, http.StatusCreated, response)
+}
+
+func (u *UserHandler) GetMe(w http.ResponseWriter, r *http.Request) {
+	userID, ok := r.Context().Value(userIDKey).(string)
+	if !ok {
+		http.Error(w, "unauthorized", http.StatusUnauthorized)
+		return
+	}
+
+	user, err := u.service.GetUser(r.Context(), userID)
+	if err != nil {
+		slog.Error(
+			"user registration failed",
+			slog.Any("error", err),
+		)
+
+		writeError(
+			w,
+			http.StatusBadRequest,
+			v1Generated.INVALIDREQUEST,
+			"password must not be empty",
+		)
+		return
+	}
+
+	response := v1Generated.UserResponse{
+		Id:       user.ID,
+		Username: user.Username,
 	}
 
 	writeJSON(w, http.StatusCreated, response)
