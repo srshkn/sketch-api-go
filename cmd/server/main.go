@@ -48,7 +48,13 @@ func main() {
 
 	queries := db.New(pool)
 
-	serverApp := app.New(cfg.Server, logger, queries, jwtManager)
+	serverApp := app.New(
+		cfg.Server,
+		logger,
+		queries,
+		jwtManager,
+		cfg.CORS,
+	)
 
 	err = serverApp.Run(ctx)
 	if err != nil {

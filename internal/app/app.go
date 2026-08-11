@@ -31,6 +31,7 @@ func New(
 	logger *slog.Logger,
 	db db.Querier,
 	jwtManager *token.Manager,
+	cors config.CORSConfig,
 ) *ServerApp {
 	mux := http.NewServeMux()
 
@@ -62,7 +63,7 @@ func New(
 	swagger.Register(mux)
 
 	server := &http.Server{
-		Handler: mux,
+		Handler: middleware.CORS(cors)(mux),
 		Addr:    net.JoinHostPort(cfg.Host, cfg.Port),
 	}
 
