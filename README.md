@@ -97,23 +97,39 @@ go test ./internal/handlers
 
 ```text
 sketch-api-go
-├── api/
+│
+├── .github/workflows/       # CI/CD
+│
+├── api/v1
 │   ├── configs/             # конфигурация генератора oapi-codegen
 │   └── openapi.yml          # исходный OpenAPI-контракт
+│
 ├── cmd/
 │   └── server/
 │       └── main.go          # точка входа приложения
-├── docs/
-│   └── BACKEND.md           # документация backend и API
-├── internal/
-│   ├── generated/           # код, сгенерированный из OpenAPI
-│   ├── handlers/            # реализация и тесты HTTP-handlers
-│   └── swagger/             # публикация Swagger UI и OpenAPI JSON
-├── .github/workflows/       # CI и автоматическое создание тегов
+│
+├── db/                      # SQL-миграции и запросы к PostgreSQL
+│
+├── docs/                    # доп. документация проекта
+│
+├── infra/                   # инфраструктурный код и конфигурация
+│
+├── internal/                # внутренний код приложения
+│
+├── secrets/                 # локальные секреты для разработки
+│
+├── .dockerignore            # файлы, исключаемые из Docker build context 
+├── .env.example             # пример переменных окружения
+├── .gitignore               # файлы, исключаемые из Git
+├── .version                 # версия приложения
+├── compose.yml              # основная Docker Compose конфигурация
 ├── Dockerfile               # сборка production-образа
-├── Makefile                 # команды запуска, генерации и Docker
+├── Makefile                 # команды запуска
 ├── go.mod                   # модуль и зависимости Go
-└── README.md
+├── go.sum                   # контрольные суммы зависимостей
+├── sqlc.yml                 # конфигурация генерации sqlc
+├── LICENSE                  # лицензия проекта
+└── README.md                # описание и документация проекта
 ```
 
 Файлы в `internal/generated` не следует редактировать вручную: они
