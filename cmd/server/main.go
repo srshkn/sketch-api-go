@@ -16,12 +16,19 @@ import (
 )
 
 func main() {
+
+	// -------------------------------------------------------------------------
+	// Context
+
 	ctx, stop := signal.NotifyContext(
 		context.Background(),
 		os.Interrupt,
 		syscall.SIGTERM,
 	)
 	defer stop()
+
+	// -------------------------------------------------------------------------
+	// Configuration
 
 	cfg, err := config.New()
 	if err != nil {
@@ -32,7 +39,13 @@ func main() {
 		os.Exit(1)
 	}
 
+	// -------------------------------------------------------------------------
+	// Logger
+
 	logger := logging.New(cfg.Logger)
+
+	// -------------------------------------------------------------------------
+	// Postgres
 
 	pool, err := postgres.NewPool(ctx, cfg.Postgres)
 	if err != nil {
@@ -44,9 +57,15 @@ func main() {
 	}
 	defer pool.Close()
 
+	queries := db.New(pool)
+
+	// -------------------------------------------------------------------------
+	// JWT manager
+
 	jwtManager := token.New(cfg.Token)
 
-	queries := db.New(pool)
+	// -------------------------------------------------------------------------
+	// Server
 
 	serverApp := app.New(
 		cfg.Server,
@@ -55,6 +74,9 @@ func main() {
 		jwtManager,
 		cfg.CORS,
 	)
+
+	// -------------------------------------------------------------------------
+	// Run
 
 	err = serverApp.Run(ctx)
 	if err != nil {
