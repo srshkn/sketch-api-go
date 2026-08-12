@@ -8,50 +8,78 @@ import (
 	"github.com/joho/godotenv"
 )
 
-type Config struct {
-	Server   ServerConfig
-	Logger   LoggerConfig
-	Postgres PostgresConfig
-	Token    JWTConfig
-	CORS     CORSConfig
+/*
+type ConfigApp interface {
+	Server() *configServer
+	Postgres() *configPostgres
+	CORS() *configCORS
+}
+*/
+
+type config struct {
+	server   configServer
+	logger   configLogger
+	postgres configPostgres
+	jwt      configJWT
+	cors     configCORS
 }
 
-func New() (*Config, error) {
+func (c *config) Server() *configServer {
+	return &c.server
+}
+
+func (c *config) Logger() *configLogger {
+	return &c.logger
+}
+
+func (c *config) Postgres() *configPostgres {
+	return &c.postgres
+}
+
+func (c *config) JWT() *configJWT {
+	return &c.jwt
+}
+
+func (c *config) CORS() *configCORS {
+	return &c.cors
+}
+
+func New() (*config, error) {
 	if err := godotenv.Load(); err != nil && !errors.Is(err, os.ErrNotExist) {
 		return nil, fmt.Errorf("load .env: %w", err)
 	}
 
-	serverConfig, err := newServerConfig()
+	server, err := newServerConfig()
 	if err != nil {
 		return nil, err
 	}
 
-	loggerConfig, err := newLoggerConfig()
+	logger, err := newLoggerConfig()
 	if err != nil {
 		return nil, err
 	}
 
-	postgresConfig, err := newPostgresConfig()
+	postgres, err := newPostgresConfig()
 	if err != nil {
 		return nil, err
 	}
 
-	jwtCinfig, err := newJWTConfig()
+	jwt, err := newJWTConfig()
 	if err != nil {
 		return nil, err
 	}
 
-	corsConfig, err := newCORSConfig()
+	cors, err := newCORSConfig()
 	if err != nil {
 		return nil, err
 	}
 
-	config := Config{
-		Server:   serverConfig,
-		Logger:   loggerConfig,
-		Postgres: postgresConfig,
-		Token:    jwtCinfig,
-		CORS:     corsConfig,
+	config := config{
+		server:   *server,
+		logger:   *logger,
+		postgres: *postgres,
+		jwt:      *jwt,
+		cors:     *cors,
 	}
 
 	return &config, nil

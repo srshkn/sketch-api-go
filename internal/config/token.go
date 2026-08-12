@@ -19,25 +19,63 @@ const (
 	audienceEnv             string = "JWT_AUDIENCE"
 )
 
-type JWTConfig struct {
-	PrivateKey *rsa.PrivateKey
-	PublicKey  *rsa.PublicKey
-
-	AccessExpiresMinutes  int
-	RefreshExpiresMinutes int
-
-	RefreshCookieName string
-	Issuer            string
-	Audience          string
+type JWT interface {
+	PrivateKey() *rsa.PrivateKey
+	PublicKey() *rsa.PublicKey
+	AccessExpiresMinutes() int
+	RefreshExpiresMinutes() int
+	RefreshCookieName() string
+	Issuer() string
+	Audience() string
 }
 
-func (j *JWTConfig) validate() error {
+type configJWT struct {
+	privateKey *rsa.PrivateKey
+	publicKey  *rsa.PublicKey
+
+	accessExpiresMinutes  int
+	refreshExpiresMinutes int
+
+	refreshCookieName string
+	issuer            string
+	audience          string
+}
+
+func (j *configJWT) PrivateKey() *rsa.PrivateKey {
+	return j.privateKey
+}
+
+func (j *configJWT) PublicKey() *rsa.PublicKey {
+	return j.publicKey
+}
+
+func (j *configJWT) AccessExpiresMinutes() int {
+	return j.accessExpiresMinutes
+}
+
+func (j *configJWT) RefreshExpiresMinutes() int {
+	return j.refreshExpiresMinutes
+}
+
+func (j *configJWT) RefreshCookieName() string {
+	return j.refreshCookieName
+}
+
+func (j *configJWT) Issuer() string {
+	return j.issuer
+}
+
+func (j *configJWT) Audience() string {
+	return j.audience
+}
+
+func (j *configJWT) validate() error {
 	switch {
-	case j.RefreshCookieName == "":
+	case j.refreshCookieName == "":
 		return fmt.Errorf("environment variable %q is required", refreshCookieNameEnv)
-	case j.Issuer == "":
+	case j.issuer == "":
 		return fmt.Errorf("environment variable %q is required", issuerEnv)
-	case j.Audience == "":
+	case j.audience == "":
 		return fmt.Errorf("environment variable %q is required", audienceEnv)
 	}
 
@@ -112,7 +150,7 @@ func parsePublicKey(data []byte) (*rsa.PublicKey, error) {
 	return rsaKey, nil
 }
 
-func (j *JWTConfig) loadKeys() error {
+func (j *configJWT) loadKeys() error {
 	privateKeyPath := os.Getenv(pathPrivatKeyEnv)
 	publicKeyPath := os.Getenv(pathPublicKeyEnv)
 
@@ -140,12 +178,12 @@ func (j *JWTConfig) loadKeys() error {
 		return fmt.Errorf("public key: %w", err)
 	}
 
-	j.PrivateKey, err = parsePrivateKey(privatePEM)
+	j.privateKey, err = parsePrivateKey(privatePEM)
 	if err != nil {
 		return fmt.Errorf("private key: %w", err)
 	}
 
-	j.PublicKey, err = parsePublicKey(publicPEM)
+	j.publicKey, err = parsePublicKey(publicPEM)
 	if err != nil {
 		return fmt.Errorf("public key: %w", err)
 	}
@@ -153,7 +191,7 @@ func (j *JWTConfig) loadKeys() error {
 	return nil
 }
 
-func (j *JWTConfig) loadMinutes() error {
+func (j *configJWT) loadMinutes() error {
 	accessExpiresMinutes, err := strconv.Atoi(os.Getenv(accessExpiresMinutesEnv))
 	if err != nil {
 		return fmt.Errorf(
@@ -186,30 +224,30 @@ func (j *JWTConfig) loadMinutes() error {
 		)
 	}
 
-	j.AccessExpiresMinutes = accessExpiresMinutes
-	j.RefreshExpiresMinutes = refreshExpiresDays
+	j.accessExpiresMinutes = accessExpiresMinutes
+	j.refreshExpiresMinutes = refreshExpiresDays
 
 	return nil
 }
 
-func newJWTConfig() (JWTConfig, error) {
-	token := JWTConfig{
-		RefreshCookieName: os.Getenv(refreshCookieNameEnv),
-		Issuer:            os.Getenv(issuerEnv),
-		Audience:          os.Getenv(audienceEnv),
+func newJWTConfig() (*configJWT, error) {
+	token := configJWT{
+		refreshCookieName: os.Getenv(refreshCookieNameEnv),
+		issuer:            os.Getenv(issuerEnv),
+		audience:          os.Getenv(audienceEnv),
 	}
 
 	if err := token.validate(); err != nil {
-		return token, err
+		return &token, err
 	}
 
 	if err := token.loadMinutes(); err != nil {
-		return token, err
+		return &token, err
 	}
 
 	if err := token.loadKeys(); err != nil {
-		return token, err
+		return &token, err
 	}
 
-	return token, nil
+	return &token, nil
 }

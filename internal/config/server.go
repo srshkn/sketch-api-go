@@ -11,20 +11,33 @@ const (
 	serverPortEnv string = "SERVER_PORT"
 )
 
-type ServerConfig struct {
-	Host string
-	Port string
+type Server interface {
+	Host() string
+	Port() string
 }
 
-func (s *ServerConfig) validateServer() error {
+type configServer struct {
+	host string
+	port string
+}
+
+func (s *configServer) Host() string {
+	return s.host
+}
+
+func (s *configServer) Port() string {
+	return s.port
+}
+
+func (s *configServer) validateServer() error {
 	switch {
-	case s.Host == "":
+	case s.host == "":
 		return fmt.Errorf("environment variable %q is required", serverHostEnv)
-	case s.Port == "":
+	case s.port == "":
 		return fmt.Errorf("environment variable %q is required", serverPortEnv)
 	}
 
-	port, err := strconv.Atoi(s.Port)
+	port, err := strconv.Atoi(s.port)
 	if err != nil {
 		return fmt.Errorf(
 			"environment variable %q must be a number: %w",
@@ -43,15 +56,15 @@ func (s *ServerConfig) validateServer() error {
 	return nil
 }
 
-func newServerConfig() (ServerConfig, error) {
-	server := ServerConfig{
-		Host: os.Getenv(serverHostEnv),
-		Port: os.Getenv(serverPortEnv),
+func newServerConfig() (*configServer, error) {
+	server := configServer{
+		host: os.Getenv(serverHostEnv),
+		port: os.Getenv(serverPortEnv),
 	}
 
 	if err := server.validateServer(); err != nil {
-		return server, err
+		return &server, err
 	}
 
-	return server, nil
+	return &server, nil
 }

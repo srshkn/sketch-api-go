@@ -9,27 +9,35 @@ const (
 	loggerFormatEnv string = "LOGGER_FORMAT"
 )
 
-type LoggerConfig struct {
-	Format string
+type Logger interface {
+	Format() string
 }
 
-func (l *LoggerConfig) validateLogger() error {
+type configLogger struct {
+	format string
+}
 
-	if l.Format != "dev" && l.Format != "local" && l.Format != "prod" {
+func (l *configLogger) Format() string {
+	return l.format
+}
+
+func (l *configLogger) validateLogger() error {
+
+	if l.format != "dev" && l.format != "local" && l.format != "prod" {
 		return fmt.Errorf("environment variable %q is required", loggerFormatEnv)
 	}
 
 	return nil
 }
 
-func newLoggerConfig() (LoggerConfig, error) {
-	logger := LoggerConfig{
-		Format: os.Getenv(loggerFormatEnv),
+func newLoggerConfig() (*configLogger, error) {
+	logger := configLogger{
+		format: os.Getenv(loggerFormatEnv),
 	}
 
 	if err := logger.validateLogger(); err != nil {
-		return logger, err
+		return &logger, err
 	}
 
-	return logger, nil
+	return &logger, nil
 }

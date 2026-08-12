@@ -11,20 +11,21 @@ import (
 	"sketch-api-go/internal/config"
 )
 
-func NewPool(ctx context.Context, cfg config.PostgresConfig) (*pgxpool.Pool, error) {
-	if cfg.URL == "" {
+func NewPool(ctx context.Context, cfg config.Postgres) (*pgxpool.Pool, error) {
+	url := cfg.URL()
+	if url == "" {
 		return nil, errors.New("database URL is empty")
 	}
 
-	config, err := pgxpool.ParseConfig(cfg.URL)
+	config, err := pgxpool.ParseConfig(url)
 	if err != nil {
 		return nil, fmt.Errorf("parse database URL: %w", err)
 	}
 
-	config.MaxConns = cfg.MaxOpenConns
-	config.MinConns = cfg.MinOpenConns
-	config.MaxConnLifetime = cfg.ConnMaxLifetime
-	config.MaxConnIdleTime = cfg.MaxConnIdleTime
+	config.MaxConns = cfg.MaxOpenConns()
+	config.MinConns = cfg.MinOpenConns()
+	config.MaxConnLifetime = cfg.ConnMaxLifetime()
+	config.MaxConnIdleTime = cfg.MaxConnIdleTime()
 
 	connectCtx, cancel := context.WithTimeout(ctx, 5*time.Second)
 	defer cancel()

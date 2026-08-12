@@ -43,12 +43,12 @@ func newClaims(userID, tokenType, issuer string, accessMinutes int) *Claims {
 }
 
 type Manager struct {
-	config      config.JWTConfig
+	config      config.JWT
 	accessName  string
 	refreshName string
 }
 
-func New(cfg config.JWTConfig) *Manager {
+func New(cfg config.JWT) *Manager {
 	return &Manager{
 		config:      cfg,
 		accessName:  Access,
@@ -60,8 +60,8 @@ func (m *Manager) CreateAccessToken(userID string) (AccessToken, error) {
 	claim := newClaims(
 		userID,
 		m.accessName,
-		m.config.Issuer,
-		m.config.AccessExpiresMinutes,
+		m.config.Issuer(),
+		m.config.AccessExpiresMinutes(),
 	)
 
 	token := jwt.NewWithClaims(jwt.SigningMethodRS256, claim)
@@ -114,5 +114,5 @@ func (_ *Manager) HashToken(refreshToken RefreshToken) string {
 }
 
 func (m *Manager) RefreshTokenExpiresAt() time.Time {
-	return time.Now().Add(time.Duration(m.config.RefreshExpiresMinutes) * 24 * time.Hour)
+	return time.Now().Add(time.Duration(m.config.RefreshExpiresMinutes()) * 24 * time.Hour)
 }

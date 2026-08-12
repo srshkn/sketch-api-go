@@ -7,10 +7,12 @@ import (
 	"sketch-api-go/internal/config"
 )
 
-func New(cfg config.LoggerConfig) *slog.Logger {
+func New(cfg config.Logger) *slog.Logger {
 	var handler slog.Handler
 
-	switch cfg.Format {
+	format := cfg.Format()
+
+	switch format {
 	case "dev", "local":
 		handler = slog.NewTextHandler(
 			os.Stdout,

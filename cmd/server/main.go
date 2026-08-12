@@ -42,12 +42,12 @@ func main() {
 	// -------------------------------------------------------------------------
 	// Logger
 
-	logger := logging.New(cfg.Logger)
+	logger := logging.New(cfg.Logger())
 
 	// -------------------------------------------------------------------------
 	// Postgres
 
-	pool, err := postgres.NewPool(ctx, cfg.Postgres)
+	pool, err := postgres.NewPool(ctx, cfg.Postgres())
 	if err != nil {
 		logger.Error(
 			"connect to PostgreSQL: %v",
@@ -62,17 +62,17 @@ func main() {
 	// -------------------------------------------------------------------------
 	// JWT manager
 
-	jwtManager := token.New(cfg.Token)
+	jwtManager := token.New(cfg.JWT())
 
 	// -------------------------------------------------------------------------
 	// Server
 
 	serverApp := app.New(
-		cfg.Server,
+		cfg.Server(),
 		logger,
 		queries,
 		jwtManager,
-		cfg.CORS,
+		cfg.CORS(),
 	)
 
 	// -------------------------------------------------------------------------

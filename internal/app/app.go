@@ -27,11 +27,11 @@ type ServerApp struct {
 }
 
 func New(
-	cfg config.ServerConfig,
+	cfg config.Server,
 	logger *slog.Logger,
 	db db.Querier,
 	jwtManager *token.Manager,
-	cors config.CORSConfig,
+	cors config.CORS,
 ) *ServerApp {
 	mux := http.NewServeMux()
 
@@ -64,7 +64,7 @@ func New(
 
 	server := &http.Server{
 		Handler: middleware.CORS(cors)(mux),
-		Addr:    net.JoinHostPort(cfg.Host, cfg.Port),
+		Addr:    net.JoinHostPort(cfg.Host(), cfg.Port()),
 	}
 
 	return &ServerApp{

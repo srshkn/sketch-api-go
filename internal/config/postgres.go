@@ -16,20 +16,48 @@ const (
 	postgresDataBaseEnv string = "POSTGRES_DB"
 )
 
-type PostgresConfig struct {
+type Postgres interface {
+	URL() string
+	MaxOpenConns() int32
+	MinOpenConns() int32
+	ConnMaxLifetime() time.Duration
+	MaxConnIdleTime() time.Duration
+}
+
+type configPostgres struct {
 	host            string
 	port            string
 	user            string
 	password        string
 	dataBase        string
-	URL             string
-	MaxOpenConns    int32
-	MinOpenConns    int32
-	ConnMaxLifetime time.Duration
-	MaxConnIdleTime time.Duration
+	url             string
+	maxOpenConns    int32
+	minOpenConns    int32
+	connMaxLifetime time.Duration
+	maxConnIdleTime time.Duration
 }
 
-func (p *PostgresConfig) validatePostgres() error {
+func (p *configPostgres) URL() string {
+	return p.url
+}
+
+func (p *configPostgres) MaxOpenConns() int32 {
+	return p.maxOpenConns
+}
+
+func (p *configPostgres) MinOpenConns() int32 {
+	return p.minOpenConns
+}
+
+func (p *configPostgres) ConnMaxLifetime() time.Duration {
+	return p.connMaxLifetime
+}
+
+func (p *configPostgres) MaxConnIdleTime() time.Duration {
+	return p.maxConnIdleTime
+}
+
+func (p *configPostgres) validatePostgres() error {
 	switch {
 	case p.host == "":
 		return fmt.Errorf("environment variable %q is required", postgresHostEnv)
@@ -76,7 +104,7 @@ func (p *PostgresConfig) validatePostgres() error {
 	return nil
 }
 
-func (p *PostgresConfig) createUrl() {
+func (p *configPostgres) createUrl() {
 	databaseURL := url.URL{
 		Scheme: "postgres",
 		User:   url.UserPassword(p.user, p.password),
@@ -88,27 +116,27 @@ func (p *PostgresConfig) createUrl() {
 	query.Set("sslmode", "disable")
 	databaseURL.RawQuery = query.Encode()
 
-	p.URL = databaseURL.String()
+	p.url = databaseURL.String()
 }
 
-func newPostgresConfig() (PostgresConfig, error) {
-	postgres := PostgresConfig{
+func newPostgresConfig() (*configPostgres, error) {
+	postgres := configPostgres{
 		host:            os.Getenv(postgresHostEnv),
 		port:            os.Getenv(postgresPortEnv),
 		user:            os.Getenv(postgresUserEnv),
 		password:        os.Getenv(postgresPasswordEnv),
 		dataBase:        os.Getenv(postgresDataBaseEnv),
-		MaxOpenConns:    10,
-		MinOpenConns:    2,
-		ConnMaxLifetime: time.Hour,
-		MaxConnIdleTime: 15 * time.Minute,
+		maxOpenConns:    10,
+		minOpenConns:    2,
+		connMaxLifetime: time.Hour,
+		maxConnIdleTime: 15 * time.Minute,
 	}
 
 	if err := postgres.validatePostgres(); err != nil {
-		return postgres, err
+		return &postgres, err
 	}
 
 	postgres.createUrl()
 
-	return postgres, nil
+	return &postgres, nil
 }

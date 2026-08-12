@@ -15,15 +15,38 @@ const (
 	corsAllowedCredentialsEnv string = "CORS_ALLOW_CREDENTIALS"
 )
 
-type CORSConfig struct {
-	AllowedOrigins   []string
-	AllowedMethods   string
-	AllowedHeaders   string
-	AllowCredentials string
+type CORS interface {
+	GetAllowedOrigins() []string
+	GetAllowedMethods() string
+	GetAllowedHeaders() string
+	GetallowCredentials() string
 }
 
-func (c *CORSConfig) validateCORS() error {
-	for _, origin := range c.AllowedOrigins {
+type configCORS struct {
+	allowedOrigins   []string
+	allowedMethods   string
+	allowedHeaders   string
+	allowCredentials string
+}
+
+func (c *configCORS) GetAllowedOrigins() []string {
+	return c.allowedOrigins
+}
+
+func (c *configCORS) GetAllowedMethods() string {
+	return c.allowedMethods
+}
+
+func (c *configCORS) GetAllowedHeaders() string {
+	return c.allowedHeaders
+}
+
+func (c *configCORS) GetallowCredentials() string {
+	return c.allowCredentials
+}
+
+func (c *configCORS) validateCORS() error {
+	for _, origin := range c.allowedOrigins {
 		if origin == "" {
 			return errors.New("CORS origin cannot be empty")
 		}
@@ -45,7 +68,7 @@ func (c *CORSConfig) validateCORS() error {
 		}
 	}
 
-	for _, method := range strings.Split(c.AllowedMethods, ",") {
+	for _, method := range strings.Split(c.allowedMethods, ",") {
 		method = strings.TrimSpace(method)
 
 		switch method {
@@ -56,7 +79,7 @@ func (c *CORSConfig) validateCORS() error {
 		}
 	}
 
-	for _, header := range strings.Split(c.AllowedHeaders, ",") {
+	for _, header := range strings.Split(c.allowedHeaders, ",") {
 		header = strings.TrimSpace(header)
 
 		if header == "" {
@@ -64,33 +87,33 @@ func (c *CORSConfig) validateCORS() error {
 		}
 	}
 
-	switch c.AllowCredentials {
+	switch c.allowCredentials {
 	case "true", "false":
 	// OK
 	default:
-		return fmt.Errorf("invalid CORS credentials %q", c.AllowCredentials)
+		return fmt.Errorf("invalid CORS credentials %q", c.allowCredentials)
 	}
 
 	return nil
 }
 
-func newCORSConfig() (CORSConfig, error) {
+func newCORSConfig() (*configCORS, error) {
 	origins := strings.Split(os.Getenv(corsAllowedOriginsEnv), ",")
 
 	for i := range origins {
 		origins[i] = strings.TrimSpace(origins[i])
 	}
 
-	corsConfig := CORSConfig{
-		AllowedOrigins:   origins,
-		AllowedMethods:   os.Getenv(corsAllowedMethodsEnv),
-		AllowedHeaders:   os.Getenv(corsAllowedHeadersEnv),
-		AllowCredentials: os.Getenv(corsAllowedCredentialsEnv),
+	config := configCORS{
+		allowedOrigins:   origins,
+		allowedMethods:   os.Getenv(corsAllowedMethodsEnv),
+		allowedHeaders:   os.Getenv(corsAllowedHeadersEnv),
+		allowCredentials: os.Getenv(corsAllowedCredentialsEnv),
 	}
 
-	if err := corsConfig.validateCORS(); err != nil {
-		return corsConfig, err
+	if err := config.validateCORS(); err != nil {
+		return &config, err
 	}
 
-	return corsConfig, nil
+	return &config, nil
 }
