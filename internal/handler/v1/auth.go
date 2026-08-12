@@ -5,6 +5,7 @@ import (
 	"log/slog"
 	"net/http"
 
+	"sketch-api-go/internal/cookie"
 	"sketch-api-go/internal/service"
 
 	v1Generated "sketch-api-go/internal/generated/v1"
@@ -12,11 +13,13 @@ import (
 
 type AuthHandler struct {
 	service *service.AuthService
+	cookie  cookie.Auth
 }
 
-func NewAuthHandler(service *service.AuthService) *AuthHandler {
+func NewAuthHandler(service *service.AuthService, cookie cookie.Auth) *AuthHandler {
 	return &AuthHandler{
 		service: service,
+		cookie:  cookie,
 	}
 }
 

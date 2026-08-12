@@ -11,7 +11,9 @@ import (
 /*
 type ConfigApp interface {
 	Server() *configServer
+	Logger() *configLogger
 	Postgres() *configPostgres
+	JWT() *configJWT
 	CORS() *configCORS
 }
 */
@@ -22,6 +24,7 @@ type config struct {
 	postgres configPostgres
 	jwt      configJWT
 	cors     configCORS
+	cookie   configCookie
 }
 
 func (c *config) Server() *configServer {
@@ -42,6 +45,10 @@ func (c *config) JWT() *configJWT {
 
 func (c *config) CORS() *configCORS {
 	return &c.cors
+}
+
+func (c *config) Cookie() *configCookie {
+	return &c.cookie
 }
 
 func New() (*config, error) {
@@ -74,12 +81,18 @@ func New() (*config, error) {
 		return nil, err
 	}
 
+	cookie, err := newCookieConfig()
+	if err != nil {
+		return nil, err
+	}
+
 	config := config{
 		server:   *server,
 		logger:   *logger,
 		postgres: *postgres,
 		jwt:      *jwt,
 		cors:     *cors,
+		cookie:   *cookie,
 	}
 
 	return &config, nil

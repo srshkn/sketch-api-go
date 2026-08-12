@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"sketch-api-go/internal/config"
+	"sketch-api-go/internal/cookie"
 	"sketch-api-go/internal/db"
 	"sketch-api-go/internal/service"
 	"sketch-api-go/internal/swagger"
@@ -32,6 +33,7 @@ func New(
 	db db.Querier,
 	jwtManager *token.Manager,
 	cors config.CORS,
+	cookieManager cookie.Auth,
 ) *ServerApp {
 	mux := http.NewServeMux()
 
@@ -40,7 +42,7 @@ func New(
 
 	v1MetaHandler := v1Handler.NewMetaHandler()
 	v1UserHandler := v1Handler.NewUserHandler(userService)
-	v1AuthHandler := v1Handler.NewAuthHandler(authService)
+	v1AuthHandler := v1Handler.NewAuthHandler(authService, cookieManager)
 
 	v1APIHandler := v1Handler.New(
 		v1MetaHandler,

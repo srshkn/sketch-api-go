@@ -9,6 +9,7 @@ import (
 
 	"sketch-api-go/internal/app"
 	"sketch-api-go/internal/config"
+	"sketch-api-go/internal/cookie"
 	"sketch-api-go/internal/db"
 	"sketch-api-go/internal/logging"
 	"sketch-api-go/internal/postgres"
@@ -64,6 +65,8 @@ func main() {
 
 	jwtManager := token.New(cfg.JWT())
 
+	cookieManager := cookie.New(cfg.Cookie())
+
 	// -------------------------------------------------------------------------
 	// Server
 
@@ -73,6 +76,7 @@ func main() {
 		queries,
 		jwtManager,
 		cfg.CORS(),
+		cookieManager,
 	)
 
 	// -------------------------------------------------------------------------
