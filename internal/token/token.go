@@ -88,7 +88,7 @@ func (m *manager) CreateAccessToken(userID string) (AccessToken, error) {
 
 	token := jwt.NewWithClaims(jwt.SigningMethodRS256, claim)
 
-	accessToken, err := token.SignedString(m.config.PrivateKey)
+	accessToken, err := token.SignedString(m.config.PrivateKey())
 	if err != nil {
 		return AccessToken(accessToken), err
 	}
@@ -104,7 +104,7 @@ func (m *manager) ValidateAccessToken(tokenString string) (*claims, error) {
 			if _, ok := token.Method.(*jwt.SigningMethodRSA); !ok {
 				return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
 			}
-			return m.config.PublicKey, nil
+			return m.config.PublicKey(), nil
 		},
 	)
 

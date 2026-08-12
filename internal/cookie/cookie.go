@@ -25,6 +25,7 @@ func (m *manager) SetRefreshToken(
 	expiresAt time.Time,
 ) {
 	http.SetCookie(w, &http.Cookie{
+		Name:     m.auth.RefreshTokenName(),
 		Value:    token,
 		Expires:  expiresAt,
 		Path:     m.auth.Path(),

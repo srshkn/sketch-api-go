@@ -146,7 +146,7 @@ func newCookieConfig() (*configCookie, error) {
 	}
 
 	cookie = configCookie{
-		refreshTokenName: os.Getenv(refreshExpiresDaysEnv),
+		refreshTokenName: os.Getenv(authCookieNameEnv),
 		path:             os.Getenv(authCookiePathEnv),
 		domain:           os.Getenv(authCookieDomainEnv),
 		secure:           secure,
