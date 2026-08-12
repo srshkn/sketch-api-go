@@ -20,10 +20,10 @@ var ErrRefreshTokenExpired = errors.New("refresh token expired")
 
 type AuthService struct {
 	repository   repository.AuthRepository
-	tokenManager *token.Manager
+	tokenManager token.JWTManager
 }
 
-func NewAuthService(auth repository.AuthRepository, manager *token.Manager) *AuthService {
+func NewAuthService(auth repository.AuthRepository, manager token.JWTManager) *AuthService {
 	return &AuthService{
 		repository:   auth,
 		tokenManager: manager,
@@ -33,19 +33,18 @@ func NewAuthService(auth repository.AuthRepository, manager *token.Manager) *Aut
 func (a *AuthService) Login(
 	ctx context.Context,
 	request v1Generated.LoginUserRequest,
-) (token.AccessToken, token.RefreshToken, error) {
-	var accessToken token.AccessToken
-	var refreshToken token.RefreshToken
+) (token.TokenPair, error) {
+	var tokenPair token.TokenPair
 
 	user, err := a.repository.GetUserByEmail(ctx, strings.ToLower(string(request.Email)))
 	if err != nil {
-		return accessToken, refreshToken, err
+		return tokenPair, err
 	}
 
 	if flag, err := password.Compare(request.Password, user.PasswordHash); !flag {
-		return accessToken, refreshToken, errors.New("неверный пароль")
+		return tokenPair, errors.New("неверный пароль")
 	} else if err != nil {
-		return accessToken, refreshToken, err
+		return tokenPair, err
 	}
 
 	return a.issueTokens(ctx, user.ID)
@@ -54,24 +53,23 @@ func (a *AuthService) Login(
 func (a *AuthService) Refresh(
 	ctx context.Context,
 	request v1Generated.RefreshRequest,
-) (token.AccessToken, token.RefreshToken, error) {
-	var accessToken token.AccessToken
-	var refreshToken token.RefreshToken
+) (token.TokenPair, error) {
+	var tokenPair token.TokenPair
 
 	tokenHash := a.tokenManager.HashToken(token.RefreshToken(request.RefreshToken))
 
 	stored, err := a.getValidRefresh(ctx, tokenHash)
 	if err != nil {
-		return accessToken, refreshToken, err
+		return tokenPair, err
 	}
 
 	user, err := a.getUserForToken(ctx, stored.UserID)
 	if err != nil {
-		return accessToken, refreshToken, err
+		return tokenPair, err
 	}
 
 	if err = a.repository.DeleteTokenHash(ctx, tokenHash); err != nil {
-		return accessToken, refreshToken, err
+		return tokenPair, err
 	}
 
 	return a.issueTokens(ctx, user.ID)
@@ -102,32 +100,35 @@ func (a *AuthService) getUserForToken(ctx context.Context, userID uuid.UUID) (db
 	return user, nil
 }
 
-func (a *AuthService) issueTokens(ctx context.Context, userID uuid.UUID) (token.AccessToken, token.RefreshToken, error) {
-	var accessToken token.AccessToken
-	var refreshToken token.RefreshToken
+func (a *AuthService) issueTokens(ctx context.Context, userID uuid.UUID) (token.TokenPair, error) {
+	var tokenPair token.TokenPair
+	var err error
 
-	accessToken, err := a.tokenManager.CreateAccessToken(userID.String())
+	tokenPair.AccessToken, err = a.tokenManager.CreateAccessToken(userID.String())
 	if err != nil {
-		return accessToken, refreshToken, err
+		return tokenPair, err
 	}
 
-	refreshToken, err = a.tokenManager.GenerateRefreshToken()
+	tokenPair.RefreshToken, err = a.tokenManager.GenerateRefreshToken()
 	if err != nil {
-		return accessToken, refreshToken, err
+		return tokenPair, err
 	}
 
-	hashRefreshToken := a.tokenManager.HashToken(refreshToken)
+	hashRefreshToken := a.tokenManager.HashToken(tokenPair.RefreshToken)
+	expiresAt := a.tokenManager.RefreshTokenExpiresAt()
 
 	_, err = a.repository.CreateRefreshToken(
 		ctx, db.CreateRefreshTokenParams{
 			UserID:    userID,
 			TokenHash: hashRefreshToken,
-			ExpiresAt: a.tokenManager.RefreshTokenExpiresAt(),
+			ExpiresAt: expiresAt,
 		},
 	)
 	if err != nil {
-		return accessToken, refreshToken, err
+		return tokenPair, err
 	}
 
-	return accessToken, refreshToken, nil
+	tokenPair.ExpiresAt = expiresAt
+
+	return tokenPair, nil
 }

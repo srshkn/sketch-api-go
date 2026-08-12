@@ -16,20 +16,42 @@ import (
 type AccessToken string
 type RefreshToken string
 
+type TokenPair struct {
+	AccessToken  AccessToken
+	RefreshToken RefreshToken
+	ExpiresAt    time.Time
+}
+
+func (t TokenPair) GetAccessToken() string {
+	return string(t.AccessToken)
+}
+
+func (t TokenPair) GetRefreshToken() string {
+	return string(t.RefreshToken)
+}
+
 const (
 	Access  string = "access"
 	Refresh string = "refresh"
 )
 
-type Claims struct {
+type JWTManager interface {
+	GenerateRefreshToken() (RefreshToken, error)
+	CreateAccessToken(userID string) (AccessToken, error)
+	ValidateAccessToken(tokenString string) (*claims, error)
+	HashToken(refreshToken RefreshToken) string
+	RefreshTokenExpiresAt() time.Time
+}
+
+type claims struct {
 	UserID    string `json:"uid"`
 	TokenType string `json:"typ"`
 
 	jwt.RegisteredClaims
 }
 
-func newClaims(userID, tokenType, issuer string, accessMinutes int) *Claims {
-	return &Claims{
+func newClaims(userID, tokenType, issuer string, accessMinutes int) *claims {
+	return &claims{
 		UserID:    userID,
 		TokenType: tokenType,
 
@@ -42,21 +64,21 @@ func newClaims(userID, tokenType, issuer string, accessMinutes int) *Claims {
 	}
 }
 
-type Manager struct {
+type manager struct {
 	config      config.JWT
 	accessName  string
 	refreshName string
 }
 
-func New(cfg config.JWT) *Manager {
-	return &Manager{
+func New(cfg config.JWT) *manager {
+	return &manager{
 		config:      cfg,
 		accessName:  Access,
 		refreshName: Refresh,
 	}
 }
 
-func (m *Manager) CreateAccessToken(userID string) (AccessToken, error) {
+func (m *manager) CreateAccessToken(userID string) (AccessToken, error) {
 	claim := newClaims(
 		userID,
 		m.accessName,
@@ -74,10 +96,10 @@ func (m *Manager) CreateAccessToken(userID string) (AccessToken, error) {
 	return AccessToken(accessToken), nil
 }
 
-func (m *Manager) ValidateAccessToken(tokenString string) (*Claims, error) {
+func (m *manager) ValidateAccessToken(tokenString string) (*claims, error) {
 	token, err := jwt.ParseWithClaims(
 		tokenString,
-		&Claims{},
+		&claims{},
 		func(token *jwt.Token) (any, error) {
 			if _, ok := token.Method.(*jwt.SigningMethodRSA); !ok {
 				return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
@@ -90,7 +112,7 @@ func (m *Manager) ValidateAccessToken(tokenString string) (*Claims, error) {
 		return nil, err
 	}
 
-	claims, ok := token.Claims.(*Claims)
+	claims, ok := token.Claims.(*claims)
 	if !ok {
 		return nil, jwt.ErrTokenInvalidClaims
 	}
@@ -98,7 +120,7 @@ func (m *Manager) ValidateAccessToken(tokenString string) (*Claims, error) {
 	return claims, nil
 }
 
-func (_ *Manager) GenerateRefreshToken() (RefreshToken, error) {
+func (_ *manager) GenerateRefreshToken() (RefreshToken, error) {
 	bytes := make([]byte, 48)
 
 	if _, err := rand.Read(bytes); err != nil {
@@ -108,11 +130,11 @@ func (_ *Manager) GenerateRefreshToken() (RefreshToken, error) {
 	return RefreshToken(base64.RawURLEncoding.EncodeToString(bytes)), nil
 }
 
-func (_ *Manager) HashToken(refreshToken RefreshToken) string {
+func (_ *manager) HashToken(refreshToken RefreshToken) string {
 	hash := sha256.Sum256([]byte(refreshToken))
 	return hex.EncodeToString(hash[:])
 }
 
-func (m *Manager) RefreshTokenExpiresAt() time.Time {
+func (m *manager) RefreshTokenExpiresAt() time.Time {
 	return time.Now().Add(time.Duration(m.config.RefreshExpiresMinutes()) * 24 * time.Hour)
 }

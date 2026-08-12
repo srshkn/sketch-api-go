@@ -56,7 +56,7 @@ func (a *AuthHandler) LoginUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	accessToken, refreshToken, err := a.service.Login(r.Context(), request)
+	tokenPair, err := a.service.Login(r.Context(), request)
 	if err != nil {
 		slog.Error(
 			"user registration failed",
@@ -73,19 +73,11 @@ func (a *AuthHandler) LoginUser(w http.ResponseWriter, r *http.Request) {
 	}
 
 	response := v1Generated.TokensResponse{
-		AccessToken:  string(accessToken),
-		RefreshToken: string(refreshToken),
+		AccessToken:  tokenPair.GetAccessToken(),
+		RefreshToken: tokenPair.GetRefreshToken(),
 	}
 
-	http.SetCookie(w, &http.Cookie{
-		Name:     "refresh_token",
-		Value:    string(refreshToken),
-		Path:     "/auth",
-		HttpOnly: true,
-		Secure:   false, // локально без HTTPS
-		SameSite: http.SameSiteStrictMode,
-		MaxAge:   60 * 60 * 24 * 30,
-	})
+	a.cookie.SetRefreshToken(w, tokenPair.GetRefreshToken(), tokenPair.ExpiresAt)
 
 	writeJSON(w, http.StatusOK, response)
 }
@@ -113,7 +105,7 @@ func (a *AuthHandler) UpdateRefreshToken(w http.ResponseWriter, r *http.Request)
 		return
 	}
 
-	accessToken, refreshToken, err := a.service.Refresh(r.Context(), request)
+	tokenPair, err := a.service.Refresh(r.Context(), request)
 	if err != nil {
 		slog.Error(
 			"user registration failed",
@@ -130,19 +122,11 @@ func (a *AuthHandler) UpdateRefreshToken(w http.ResponseWriter, r *http.Request)
 	}
 
 	response := v1Generated.TokensResponse{
-		AccessToken:  string(accessToken),
-		RefreshToken: string(refreshToken),
+		AccessToken:  tokenPair.GetAccessToken(),
+		RefreshToken: tokenPair.GetRefreshToken(),
 	}
 
-	http.SetCookie(w, &http.Cookie{
-		Name:     "refresh_token",
-		Value:    string(refreshToken),
-		Path:     "/auth",
-		HttpOnly: true,
-		Secure:   false, // локально без HTTPS
-		SameSite: http.SameSiteStrictMode,
-		MaxAge:   60 * 60 * 24 * 30,
-	})
+	a.cookie.SetRefreshToken(w, tokenPair.GetRefreshToken(), tokenPair.ExpiresAt)
 
 	writeJSON(w, http.StatusOK, response)
 }

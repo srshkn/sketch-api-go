@@ -33,7 +33,7 @@ func extractBearerToken(rowToken string) (string, error) {
 	return token, nil
 }
 
-func AuthMiddleware(tokenManager *token.Manager) v1Generated.MiddlewareFunc {
+func AuthMiddleware(tokenManager token.JWTManager) v1Generated.MiddlewareFunc {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			scopes := r.Context().Value(v1Generated.BearerAuthScopes)

@@ -21,7 +21,7 @@ import (
 	"sketch-api-go/internal/token"
 )
 
-type ServerApp struct {
+type serverApp struct {
 	server          *http.Server
 	logger          *slog.Logger
 	shutdownTimeout time.Duration
@@ -31,10 +31,10 @@ func New(
 	cfg config.Server,
 	logger *slog.Logger,
 	db db.Querier,
-	jwtManager *token.Manager,
+	jwtManager token.JWTManager,
 	cors config.CORS,
 	cookieManager cookie.Auth,
-) *ServerApp {
+) *serverApp {
 	mux := http.NewServeMux()
 
 	userService := service.NewUserService(db)
@@ -69,14 +69,14 @@ func New(
 		Addr:    net.JoinHostPort(cfg.Host(), cfg.Port()),
 	}
 
-	return &ServerApp{
+	return &serverApp{
 		server:          server,
 		logger:          logger,
 		shutdownTimeout: 10 * time.Second,
 	}
 }
 
-func (s *ServerApp) gracefulStop(serverErr <-chan error) error {
+func (s *serverApp) gracefulStop(serverErr <-chan error) error {
 	shutdownCtx, cancel := context.WithTimeout(
 		context.Background(),
 		s.shutdownTimeout,
@@ -114,7 +114,7 @@ func (s *ServerApp) gracefulStop(serverErr <-chan error) error {
 	return nil
 }
 
-func (s *ServerApp) Run(ctx context.Context) error {
+func (s *serverApp) Run(ctx context.Context) error {
 	serverErr := make(chan error, 1)
 
 	go func() {
