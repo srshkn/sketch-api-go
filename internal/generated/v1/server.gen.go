@@ -16,6 +16,9 @@ type ServerInterface interface {
 	// Аутентификация пользователя.
 	// (POST /auth/login)
 	LoginUser(w http.ResponseWriter, r *http.Request)
+	// Выход из аккаунта.
+	// (POST /auth/logout)
+	LogoutUser(w http.ResponseWriter, r *http.Request)
 	// Обновление рефреш токена.
 	// (POST /auth/refresh)
 	UpdateRefreshToken(w http.ResponseWriter, r *http.Request)
@@ -44,6 +47,26 @@ func (siw *ServerInterfaceWrapper) LoginUser(w http.ResponseWriter, r *http.Requ
 
 	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		siw.Handler.LoginUser(w, r)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// LogoutUser operation middleware
+func (siw *ServerInterfaceWrapper) LogoutUser(w http.ResponseWriter, r *http.Request) {
+
+	ctx := r.Context()
+
+	ctx = context.WithValue(ctx, BearerAuthScopes, []string{})
+
+	r = r.WithContext(ctx)
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.LogoutUser(w, r)
 	}))
 
 	for _, middleware := range siw.HandlerMiddlewares {
@@ -236,6 +259,7 @@ func HandlerWithOptions(si ServerInterface, options StdHTTPServerOptions) http.H
 	}
 
 	m.HandleFunc(http.MethodPost+" "+options.BaseURL+"/auth/login", wrapper.LoginUser)
+	m.HandleFunc(http.MethodPost+" "+options.BaseURL+"/auth/logout", wrapper.LogoutUser)
 	m.HandleFunc(http.MethodPost+" "+options.BaseURL+"/auth/refresh", wrapper.UpdateRefreshToken)
 	m.HandleFunc(http.MethodGet+" "+options.BaseURL+"/health", wrapper.GetHealth)
 	m.HandleFunc(http.MethodGet+" "+options.BaseURL+"/user/me", wrapper.GetMe)

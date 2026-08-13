@@ -50,6 +50,12 @@ func (a *AuthService) Login(
 	return a.issueTokens(ctx, user.ID)
 }
 
+func (a *AuthService) Logout(ctx context.Context, refreshToken string) error {
+	tokenHash := a.tokenManager.HashToken(token.RefreshToken(refreshToken))
+
+	return a.repository.DeleteTokenHash(ctx, tokenHash)
+}
+
 func (a *AuthService) Refresh(
 	ctx context.Context,
 	request v1Generated.RefreshRequest,

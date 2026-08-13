@@ -47,6 +47,10 @@ func (h *Handler) LoginUser(w http.ResponseWriter, r *http.Request) {
 	h.auth.LoginUser(w, r)
 }
 
+func (h *Handler) LogoutUser(w http.ResponseWriter, r *http.Request) {
+	h.auth.LogoutUser(w, r)
+}
+
 func (h *Handler) UpdateRefreshToken(w http.ResponseWriter, r *http.Request) {
 	h.auth.UpdateRefreshToken(w, r)
 }

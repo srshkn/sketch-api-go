@@ -242,6 +242,25 @@ paths:
             application/json:
               schema: { $ref: '#/components/schemas/InternalErrorResponse' }
 
+  /auth/logout:
+    post:
+      security:
+        - BearerAuth: []
+      tags: [Auth]
+      summary: "Выход из аккаунта."
+      description: "..."
+      operationId: logoutUser
+
+      responses:
+        '204':
+          description: Пользователь вышел
+
+        '500':
+          description: Внутренняя ошибка сервера
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/InternalErrorResponse' }
+
   /auth/refresh:
     post:
       tags: [Auth]

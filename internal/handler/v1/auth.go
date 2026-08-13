@@ -82,6 +82,34 @@ func (a *AuthHandler) LoginUser(w http.ResponseWriter, r *http.Request) {
 	writeJSON(w, http.StatusOK, response)
 }
 
+func (a *AuthHandler) LogoutUser(w http.ResponseWriter, r *http.Request) {
+	token, err := r.Cookie("refresh_token")
+	if err != nil {
+		writeJSON(w, http.StatusNoContent, nil)
+		return
+	}
+
+	err = a.service.Logout(r.Context(), token.Value)
+	if err != nil {
+		slog.Error(
+			"user registration failed",
+			slog.Any("error", err),
+		)
+
+		writeError(
+			w,
+			http.StatusBadRequest,
+			v1Generated.INVALIDREQUEST,
+			"...",
+		)
+		return
+	}
+
+	a.cookie.ClearRefreshToken(w)
+
+	writeJSON(w, http.StatusNoContent, nil)
+}
+
 func (a *AuthHandler) UpdateRefreshToken(w http.ResponseWriter, r *http.Request) {
 	var request v1Generated.RefreshRequest
 
