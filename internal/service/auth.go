@@ -18,19 +18,25 @@ import (
 
 var ErrRefreshTokenExpired = errors.New("refresh token expired")
 
-type AuthService struct {
-	repository   repository.AuthRepository
+type Auth interface {
+	Login(ctx context.Context, request v1Generated.LoginUserRequest) (token.TokenPair, error)
+	Logout(ctx context.Context, refreshToken string) error
+	Refresh(ctx context.Context, request v1Generated.RefreshRequest) (token.TokenPair, error)
+}
+
+type authService struct {
+	repository   repository.Auth
 	tokenManager token.JWTManager
 }
 
-func NewAuthService(auth repository.AuthRepository, manager token.JWTManager) *AuthService {
-	return &AuthService{
+func NewAuthService(auth repository.Auth, manager token.JWTManager) *authService {
+	return &authService{
 		repository:   auth,
 		tokenManager: manager,
 	}
 }
 
-func (a *AuthService) Login(
+func (a *authService) Login(
 	ctx context.Context,
 	request v1Generated.LoginUserRequest,
 ) (token.TokenPair, error) {
@@ -50,13 +56,13 @@ func (a *AuthService) Login(
 	return a.issueTokens(ctx, user.ID)
 }
 
-func (a *AuthService) Logout(ctx context.Context, refreshToken string) error {
+func (a *authService) Logout(ctx context.Context, refreshToken string) error {
 	tokenHash := a.tokenManager.HashToken(token.RefreshToken(refreshToken))
 
 	return a.repository.DeleteTokenHash(ctx, tokenHash)
 }
 
-func (a *AuthService) Refresh(
+func (a *authService) Refresh(
 	ctx context.Context,
 	request v1Generated.RefreshRequest,
 ) (token.TokenPair, error) {
@@ -81,7 +87,7 @@ func (a *AuthService) Refresh(
 	return a.issueTokens(ctx, user.ID)
 }
 
-func (a *AuthService) getValidRefresh(ctx context.Context, refreshToken string) (db.RefreshToken, error) {
+func (a *authService) getValidRefresh(ctx context.Context, refreshToken string) (db.RefreshToken, error) {
 	stored, err := a.repository.GetTokenHash(ctx, refreshToken)
 	if err != nil {
 		return stored, err
@@ -98,7 +104,7 @@ func (a *AuthService) getValidRefresh(ctx context.Context, refreshToken string) 
 	return stored, nil
 }
 
-func (a *AuthService) getUserForToken(ctx context.Context, userID uuid.UUID) (db.GetUserByIDRow, error) {
+func (a *authService) getUserForToken(ctx context.Context, userID uuid.UUID) (db.GetUserByIDRow, error) {
 	user, err := a.repository.GetUserByID(ctx, userID)
 	if err != nil {
 		return user, err
@@ -106,7 +112,7 @@ func (a *AuthService) getUserForToken(ctx context.Context, userID uuid.UUID) (db
 	return user, nil
 }
 
-func (a *AuthService) issueTokens(ctx context.Context, userID uuid.UUID) (token.TokenPair, error) {
+func (a *authService) issueTokens(ctx context.Context, userID uuid.UUID) (token.TokenPair, error) {
 	var tokenPair token.TokenPair
 	var err error
 

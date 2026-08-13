@@ -8,7 +8,7 @@ import (
 	"sketch-api-go/internal/db"
 )
 
-type AuthRepository interface {
+type Auth interface {
 	CreateRefreshToken(ctx context.Context, arg db.CreateRefreshTokenParams) (uuid.UUID, error)
 	GetUserByEmail(ctx context.Context, lower string) (db.GetUserByEmailRow, error)
 	DeleteTokenHash(ctx context.Context, tokenHash string) error

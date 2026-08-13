@@ -16,10 +16,10 @@ const (
 )
 
 type UserHandler struct {
-	service *service.UserService
+	service service.User
 }
 
-func NewUserHandler(service *service.UserService) *UserHandler {
+func NewUserHandler(service service.User) *UserHandler {
 	return &UserHandler{
 		service: service,
 	}

@@ -14,17 +14,22 @@ import (
 	"github.com/google/uuid"
 )
 
-type UserService struct {
-	repository repository.UserRepository
+type User interface {
+	Registration(ctx context.Context, request v1Generated.RegisterUserRequest) (db.CreateUserRow, error)
+	GetUser(ctx context.Context, rowUserID string) (db.GetUserByIDRow, error)
 }
 
-func NewUserService(user repository.UserRepository) *UserService {
-	return &UserService{
+type userService struct {
+	repository repository.User
+}
+
+func NewUserService(user repository.User) *userService {
+	return &userService{
 		repository: user,
 	}
 }
 
-func (u *UserService) validateCreateUser(
+func (u *userService) validateCreateUser(
 	ctx context.Context,
 	userRow v1Generated.RegisterUserRequest,
 ) error {
@@ -48,7 +53,7 @@ func (u *UserService) validateCreateUser(
 	return nil
 }
 
-func (u *UserService) Registration(
+func (u *userService) Registration(
 	ctx context.Context,
 	request v1Generated.RegisterUserRequest,
 ) (db.CreateUserRow, error) {
@@ -77,7 +82,7 @@ func (u *UserService) Registration(
 	return createUser, nil
 }
 
-func (u *UserService) GetUser(ctx context.Context, rowUserID string) (db.GetUserByIDRow, error) {
+func (u *userService) GetUser(ctx context.Context, rowUserID string) (db.GetUserByIDRow, error) {
 	var user db.GetUserByIDRow
 
 	userID, err := uuid.Parse(rowUserID)
