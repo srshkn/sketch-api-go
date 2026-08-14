@@ -32,8 +32,8 @@ jobs:
         POSTGRES_PASSWORD: ${{ secrets.TEST_POSTGRES_PASSWORD }}
         POSTGRES_DB: ${{ secrets.TEST_POSTGRES_DB }}
 
-        JWT_PATH_PRIVATE_KEY: "./secrets/test-private.pem"
-        JWT_PATH_PUBLIC_KEY: "./secrets/test-public.pem"
+        JWT_PATH_PRIVATE_KEY: "${{ github.workspace }}/secrets/test-private.pem"
+        JWT_PATH_PUBLIC_KEY: "${{ github.workspace }}/secrets/test-public.pem"
         ACCESS_EXPIRES_MINUTES: ${{ secrets.TEST_ACCESS_EXPIRES_MINUTES }}
         REFRESH_EXPIRES_DAYS: ${{ secrets.TEST_REFRESH_EXPIRES_DAYS }}
         JWT_ISSUER: ${{ secrets.TEST_JWT_ISSUER }}
@@ -109,8 +109,8 @@ jobs:
         POSTGRES_PASSWORD: ${{ secrets.TEST_POSTGRES_PASSWORD }}
         POSTGRES_DB: ${{ secrets.TEST_POSTGRES_DB }}
 
-        JWT_PATH_PRIVATE_KEY: "./secrets/test-private.pem"
-        JWT_PATH_PUBLIC_KEY: "./secrets/test-public.pem"
+        JWT_PATH_PRIVATE_KEY: "${{ github.workspace }}/secrets/test-private.pem"
+        JWT_PATH_PUBLIC_KEY: "${{ github.workspace }}/secrets/test-public.pem"
         ACCESS_EXPIRES_MINUTES: ${{ secrets.TEST_ACCESS_EXPIRES_MINUTES }}
         REFRESH_EXPIRES_DAYS: ${{ secrets.TEST_REFRESH_EXPIRES_DAYS }}
         JWT_ISSUER: ${{ secrets.TEST_JWT_ISSUER }}
