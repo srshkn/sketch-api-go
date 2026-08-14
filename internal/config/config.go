@@ -56,6 +56,10 @@ func New() (*config, error) {
 }
 
 func NewFromFile(path string) (*config, error) {
+	if _, err := os.Stat(path); os.IsNotExist(err) {
+		return newConfig()
+	}
+
 	if err := godotenv.Overload(path); err != nil {
 		return nil, fmt.Errorf("load %s: %w", path, err)
 	}
