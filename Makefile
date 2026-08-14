@@ -23,6 +23,9 @@ DATABASE_URL = postgres://$(POSTGRES_USER):$(POSTGRES_PASSWORD)@$(MIGRATION_DB_H
 PRIVATE_KEY=./secrets/private.pem
 PUBLIC_KEY=./secrets/public.pem
 
+TEST_PRIVATE_KEY=./secrets/test-private.pem
+TEST_PUBLIC_KEY=./secrets/test-public.pem
+
 .DEFAULT_GOAL := help
 
 # App
@@ -69,6 +72,18 @@ jwt-gen:
 		openssl rsa -in $(PRIVATE_KEY) -pubout -out $(PUBLIC_KEY); \
 		echo "JWT keys generated in ./secrets"; \
 	fi
+
+jwt-test-gen:
+	@if [ -f $(TEST_PRIVATE_KEY) ] && [ -f $(TEST_PUBLIC_KEY) ]; then \
+		echo "JWT keys already exist. Skipping generation."; \
+	else \
+		echo "Generating JWT RS256 keys..."; \
+		mkdir -p secrets; \
+		openssl genrsa -out $(TEST_PRIVATE_KEY) 2048; \
+		openssl rsa -in $(TEST_PRIVATE_KEY) -pubout -out $(TEST_PUBLIC_KEY); \
+		echo "JWT keys generated in ./secrets"; \
+	fi
+
 
 api-v1gen:
 	@echo "===Generating Go code from OpenAPI==="
