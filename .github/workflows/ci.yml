@@ -32,6 +32,10 @@ jobs:
         POSTGRES_USER: ${{ secrets.TEST_POSTGRES_USER }}
         POSTGRES_PASSWORD: ${{ secrets.TEST_POSTGRES_PASSWORD }}
         POSTGRES_DB: ${{ secrets.TEST_POSTGRES_DB }}
+        MAX_OPEN_CONNS: ${{ secrets.TEST_MAX_OPEN_CONNS }}
+        MIN_OPEN_CONNS: ${{ secrets.TEST_MIN_OPEN_CONNS }}
+        CONN_MAX_LIFETIME: ${{ secrets.TEST_CONN_MAX_LIFETIME}}
+        MAX_CONN_IDLE_TIME: ${{ secrets.TEST_MAX_CONN_IDLE_TIM}}
 
         JWT_PATH_PRIVATE_KEY: "${{ github.workspace }}/secrets/test-private.pem"
         JWT_PATH_PUBLIC_KEY: "${{ github.workspace }}/secrets/test-public.pem"
@@ -110,6 +114,10 @@ jobs:
         POSTGRES_USER: ${{ secrets.TEST_POSTGRES_USER }}
         POSTGRES_PASSWORD: ${{ secrets.TEST_POSTGRES_PASSWORD }}
         POSTGRES_DB: ${{ secrets.TEST_POSTGRES_DB }}
+        MAX_OPEN_CONNS: ${{ secrets.TEST_MAX_OPEN_CONNS }}
+        MIN_OPEN_CONNS: ${{ secrets.TEST_MIN_OPEN_CONNS }}
+        CONN_MAX_LIFETIME: ${{ secrets.TEST_CONN_MAX_LIFETIME}}
+        MAX_CONN_IDLE_TIME: ${{ secrets.TEST_MAX_CONN_IDLE_TIM}}
 
         JWT_PATH_PRIVATE_KEY: "${{ github.workspace }}/secrets/test-private.pem"
         JWT_PATH_PUBLIC_KEY: "${{ github.workspace }}/secrets/test-public.pem"

@@ -14,6 +14,11 @@ const (
 	postgresUserEnv     string = "POSTGRES_USER"
 	postgresPasswordEnv string = "POSTGRES_PASSWORD"
 	postgresDataBaseEnv string = "POSTGRES_DB"
+
+	maxOpenConnsEnv    string = "MAX_OPEN_CONNS"
+	minOpenConnsEnv    string = "MIN_OPEN_CONNS"
+	connMaxLifetimeEnv string = "CONN_MAX_LIFETIME"
+	maxConnIdleTimeEnv string = "MAX_CONN_IDLE_TIME"
 )
 
 type Postgres interface {
@@ -120,16 +125,70 @@ func (p *configPostgres) createUrl() {
 }
 
 func newPostgresConfig() (*configPostgres, error) {
-	postgres := configPostgres{
+	var postgres configPostgres
+
+	maxOpenConnsStr := os.Getenv(maxOpenConnsEnv)
+	if maxOpenConnsStr == "" {
+		return &postgres, fmt.Errorf("")
+	}
+
+	maxOpenConns, err := strconv.Atoi(maxOpenConnsStr)
+	if err != nil {
+		return &postgres, fmt.Errorf(
+			"environment variable %q is required",
+			maxOpenConnsEnv,
+		)
+	}
+
+	minOpenConnsStr := os.Getenv(minOpenConnsEnv)
+	if minOpenConnsStr == "" {
+		return &postgres, fmt.Errorf("")
+	}
+
+	minOpenConns, err := strconv.Atoi(minOpenConnsStr)
+	if err != nil {
+		return &postgres, fmt.Errorf(
+			"environment variable %q is required",
+			minOpenConnsEnv,
+		)
+	}
+
+	connMaxLifetimeStr := os.Getenv(connMaxLifetimeEnv)
+	if connMaxLifetimeStr == "" {
+		return &postgres, fmt.Errorf("")
+	}
+
+	connMaxLifetime, err := strconv.Atoi(connMaxLifetimeStr)
+	if err != nil {
+		return &postgres, fmt.Errorf(
+			"environment variable %q is required",
+			connMaxLifetimeEnv,
+		)
+	}
+
+	maxConnIdleTimeStr := os.Getenv(maxConnIdleTimeEnv)
+	if maxConnIdleTimeStr == "" {
+		return &postgres, fmt.Errorf("")
+	}
+
+	maxConnIdleTime, err := strconv.Atoi(maxConnIdleTimeStr)
+	if err != nil {
+		return &postgres, fmt.Errorf(
+			"environment variable %q is required",
+			maxConnIdleTimeEnv,
+		)
+	}
+
+	postgres = configPostgres{
 		host:            os.Getenv(postgresHostEnv),
 		port:            os.Getenv(postgresPortEnv),
 		user:            os.Getenv(postgresUserEnv),
 		password:        os.Getenv(postgresPasswordEnv),
 		dataBase:        os.Getenv(postgresDataBaseEnv),
-		maxOpenConns:    10,
-		minOpenConns:    2,
-		connMaxLifetime: time.Hour,
-		maxConnIdleTime: 15 * time.Minute,
+		maxOpenConns:    int32(maxOpenConns),
+		minOpenConns:    int32(minOpenConns),
+		connMaxLifetime: time.Duration(connMaxLifetime) * time.Hour,
+		maxConnIdleTime: time.Duration(maxConnIdleTime) * time.Minute,
 	}
 
 	if err := postgres.validatePostgres(); err != nil {

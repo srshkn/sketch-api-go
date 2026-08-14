@@ -61,21 +61,44 @@ func (s *configServer) validateServer() error {
 		)
 	}
 
+	if s.shutdownTimeoutSecond <= 0 {
+		return fmt.Errorf(
+			"environment variable %q must be greater than 0",
+			shutdownTimeoutSecondEnv,
+		)
+	}
+
+	return nil
+}
+
+func (s *configServer) newShutdownTimeout() error {
+	timeString := os.Getenv(shutdownTimeoutSecondEnv)
+	if timeString == "" {
+		return fmt.Errorf(
+			"environment variable %q is required",
+			shutdownTimeoutSecondEnv,
+		)
+	}
+
+	timeout, err := strconv.Atoi(timeString)
+	if err != nil {
+		return err
+	}
+
+	s.shutdownTimeoutSecond = time.Duration(timeout)
+
 	return nil
 }
 
 func newServerConfig() (*configServer, error) {
-	var server configServer
 
-	s, err := strconv.Atoi(os.Getenv(shutdownTimeoutSecondEnv))
-	if err != nil {
-		return &server, err
+	server := configServer{
+		host: os.Getenv(serverHostEnv),
+		port: os.Getenv(serverPortEnv),
 	}
 
-	server = configServer{
-		host:                  os.Getenv(serverHostEnv),
-		port:                  os.Getenv(serverPortEnv),
-		shutdownTimeoutSecond: time.Duration(s),
+	if err := server.newShutdownTimeout(); err != nil {
+		return &server, err
 	}
 
 	if err := server.validateServer(); err != nil {
