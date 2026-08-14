@@ -72,7 +72,7 @@ func New(
 	return &serverApp{
 		server:          server,
 		logger:          logger,
-		shutdownTimeout: 10 * time.Second,
+		shutdownTimeout: cfg.ShutdownTimeout() * time.Second,
 	}
 }
 

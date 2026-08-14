@@ -4,21 +4,25 @@ import (
 	"fmt"
 	"os"
 	"strconv"
+	"time"
 )
 
 const (
-	serverHostEnv string = "SERVER_HOST"
-	serverPortEnv string = "SERVER_PORT"
+	serverHostEnv            string = "SERVER_HOST"
+	serverPortEnv            string = "SERVER_PORT"
+	shutdownTimeoutSecondEnv string = "SHOTDOWN_TIMEOUT_SECOND"
 )
 
 type Server interface {
 	Host() string
 	Port() string
+	ShutdownTimeout() time.Duration
 }
 
 type configServer struct {
-	host string
-	port string
+	host                  string
+	port                  string
+	shutdownTimeoutSecond time.Duration
 }
 
 func (s *configServer) Host() string {
@@ -27,6 +31,10 @@ func (s *configServer) Host() string {
 
 func (s *configServer) Port() string {
 	return s.port
+}
+
+func (s *configServer) ShutdownTimeout() time.Duration {
+	return s.shutdownTimeoutSecond
 }
 
 func (s *configServer) validateServer() error {
@@ -57,9 +65,17 @@ func (s *configServer) validateServer() error {
 }
 
 func newServerConfig() (*configServer, error) {
-	server := configServer{
-		host: os.Getenv(serverHostEnv),
-		port: os.Getenv(serverPortEnv),
+	var server configServer
+
+	s, err := strconv.Atoi(os.Getenv(shutdownTimeoutSecondEnv))
+	if err != nil {
+		return &server, err
+	}
+
+	server = configServer{
+		host:                  os.Getenv(serverHostEnv),
+		port:                  os.Getenv(serverPortEnv),
+		shutdownTimeoutSecond: time.Duration(s),
 	}
 
 	if err := server.validateServer(); err != nil {

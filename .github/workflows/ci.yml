@@ -23,6 +23,7 @@ jobs:
     env:
         SERVER_HOST: ${{ secrets.TEST_SERVER_HOST }}
         SERVER_PORT: ${{ secrets.TEST_SERVER_PORT }}
+        SHOTDOWN_TIMEOUT_SECOND: ${{ secrets.TEST_SHOTDOWN_TIMEOUT_SECOND }}
 
         LOGGER_FORMAT: ${{ secrets.TEST_LOGGER_FORMAT }}
 
@@ -100,6 +101,7 @@ jobs:
     env:
         SERVER_HOST: ${{ secrets.TEST_SERVER_HOST }}
         SERVER_PORT: ${{ secrets.TEST_SERVER_PORT }}
+        SHOTDOWN_TIMEOUT_SECOND: ${{ secrets.TEST_SHOTDOWN_TIMEOUT_SECOND }}
 
         LOGGER_FORMAT: ${{ secrets.TEST_LOGGER_FORMAT }}
 
