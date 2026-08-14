@@ -20,9 +20,47 @@ jobs:
   checks-go:
     runs-on: ubuntu-latest
 
+    env:
+        SERVER_HOST: ${{ secrets.TEST_SERVER_HOST }}
+        SERVER_PORT: ${{ secrets.TEST_SERVER_PORT }}
+
+        LOGGER_FORMAT: ${{ secrets.TEST_LOGGER_FORMAT }}
+
+        POSTGRES_HOST: ${{ secrets.TEST_POSTGRES_HOST }}
+        POSTGRES_PORT: ${{ secrets.TEST_POSTGRES_PORT }}
+        POSTGRES_USER: ${{ secrets.TEST_POSTGRES_USER }}
+        POSTGRES_PASSWORD: ${{ secrets.TEST_POSTGRES_PASSWORD }}
+        POSTGRES_DB: ${{ secrets.POSTGRES_DB }}
+
+        JWT_PATH_PRIVATE_KEY: "./secrets/test-private.pem"
+        JWT_PATH_PUBLIC_KEY: "./secrets/test-public.pem"
+        ACCESS_EXPIRES_MINUTES: ${{ secrets.TEST_ACCESS_EXPIRES_MINUTES }}
+        REFRESH_EXPIRES_DAYS: ${{ secrets.TEST_REFRESH_EXPIRES_DAYS }}
+        JWT_ISSUER: ${{ secrets.TEST_JWT_ISSUER }}
+        JWT_AUDIENCE: ${{ secrets.TEST_JWT_AUDIENCE }}
+
+        CORS_ALLOWED_ORIGINS: ${{ secrets.TEST_CORS_ALLOWED_ORIGINS }}
+        CORS_ALLOWED_METHODS: ${{ secrets.TEST_CORS_ALLOWED_METHODS }}
+        CORS_ALLOWED_HEADERS: ${{ secrets.TEST_CORS_ALLOWED_HEADERS }}
+        CORS_ALLOW_CREDENTIALS: ${{ secrets.TEST_CORS_ALLOW_CREDENTIALS }}
+
+        AUTH_COOKIE_NAME: ${{ secrets.TEST_AUTH_COOKIE_NAME }}
+        AUTH_COOKIE_PATH: ${{ secrets.TEST_AUTH_COOKIE_PATH }}
+        AUTH_COOKIE_DOMAIN: ""
+        AUTH_COOKIE_SECURE: ${{ secrets.TEST_AUTH_COOKIE_SECURE }}
+        AUTH_COOKIE_HTTP_ONLY: ${{ secrets.TEST_AUTH_COOKIE_HTTP_ONLY }}
+        AUTH_COOKIE_SAME_SITE: ${{ secrets.TEST_AUTH_COOKIE_SAME_SITE }}
+        AUTH_COOKIE_MAX_AGE: ${{ secrets.TEST_AUTH_COOKIE_MAX_AGE }}
+
     steps:
       - name: Checkout
         uses: actions/checkout@v6
+
+      - name: Create JWT keys
+        run: |
+          mkdir -p secrets
+          echo "${{ secrets.TEST_JWT_PRIVATE_KEY }}" > secrets/test-private.pem
+          echo "${{ secrets.TEST_JWT_PUBLIC_KEY }}" > secrets/test-public.pem
 
       - name: Setup Go
         uses: actions/setup-go@v7
@@ -56,15 +94,36 @@ jobs:
     runs-on: ubuntu-latest
 
     env:
-        SERVER_HOST: ${{ secrets.SERVER_HOST }}
-        SERVER_PORT: ${{ secrets.SERVER_PORT }}
+        SERVER_HOST: ${{ secrets.TEST_SERVER_HOST }}
+        SERVER_PORT: ${{ secrets.TEST_SERVER_PORT }}
 
-        LOGGER_FORMAT: ${{ secrets.LOGGER_FORMAT }}
+        LOGGER_FORMAT: ${{ secrets.TEST_LOGGER_FORMAT }}
 
-        POSTGRES_HOST: ${{ secrets.POSTGRES_HOST }}
-        POSTGRES_PORT: ${{ secrets.POSTGRES_PORT }}
-        POSTGRES_USER: ${{ secrets.POSTGRES_USER }}
-        POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD }}
+        POSTGRES_HOST: ${{ secrets.TEST_POSTGRES_HOST }}
+        POSTGRES_PORT: ${{ secrets.TEST_POSTGRES_PORT }}
+        POSTGRES_USER: ${{ secrets.TEST_POSTGRES_USER }}
+        POSTGRES_PASSWORD: ${{ secrets.TEST_POSTGRES_PASSWORD }}
+        POSTGRES_DB: ${{ secrets.POSTGRES_DB }}
+
+        JWT_PATH_PRIVATE_KEY: "./secrets/test-private.pem"
+        JWT_PATH_PUBLIC_KEY: "./secrets/test-public.pem"
+        ACCESS_EXPIRES_MINUTES: ${{ secrets.TEST_ACCESS_EXPIRES_MINUTES }}
+        REFRESH_EXPIRES_DAYS: ${{ secrets.TEST_REFRESH_EXPIRES_DAYS }}
+        JWT_ISSUER: ${{ secrets.TEST_JWT_ISSUER }}
+        JWT_AUDIENCE: ${{ secrets.TEST_JWT_AUDIENCE }}
+
+        CORS_ALLOWED_ORIGINS: ${{ secrets.TEST_CORS_ALLOWED_ORIGINS }}
+        CORS_ALLOWED_METHODS: ${{ secrets.TEST_CORS_ALLOWED_METHODS }}
+        CORS_ALLOWED_HEADERS: ${{ secrets.TEST_CORS_ALLOWED_HEADERS }}
+        CORS_ALLOW_CREDENTIALS: ${{ secrets.TEST_CORS_ALLOW_CREDENTIALS }}
+
+        AUTH_COOKIE_NAME: ${{ secrets.TEST_AUTH_COOKIE_NAME }}
+        AUTH_COOKIE_PATH: ${{ secrets.TEST_AUTH_COOKIE_PATH }}
+        AUTH_COOKIE_DOMAIN: ""
+        AUTH_COOKIE_SECURE: ${{ secrets.TEST_AUTH_COOKIE_SECURE }}
+        AUTH_COOKIE_HTTP_ONLY: ${{ secrets.TEST_AUTH_COOKIE_HTTP_ONLY }}
+        AUTH_COOKIE_SAME_SITE: ${{ secrets.TEST_AUTH_COOKIE_SAME_SITE }}
+        AUTH_COOKIE_MAX_AGE: ${{ secrets.TEST_AUTH_COOKIE_MAX_AGE }}
 
     steps:
       - name: Checkout repository
