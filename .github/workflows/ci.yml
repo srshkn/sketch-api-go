@@ -30,7 +30,7 @@ jobs:
         POSTGRES_PORT: ${{ secrets.TEST_POSTGRES_PORT }}
         POSTGRES_USER: ${{ secrets.TEST_POSTGRES_USER }}
         POSTGRES_PASSWORD: ${{ secrets.TEST_POSTGRES_PASSWORD }}
-        POSTGRES_DB: ${{ secrets.POSTGRES_DB }}
+        POSTGRES_DB: ${{ secrets.TEST_POSTGRES_DB }}
 
         JWT_PATH_PRIVATE_KEY: "./secrets/test-private.pem"
         JWT_PATH_PUBLIC_KEY: "./secrets/test-public.pem"
@@ -103,7 +103,7 @@ jobs:
         POSTGRES_PORT: ${{ secrets.TEST_POSTGRES_PORT }}
         POSTGRES_USER: ${{ secrets.TEST_POSTGRES_USER }}
         POSTGRES_PASSWORD: ${{ secrets.TEST_POSTGRES_PASSWORD }}
-        POSTGRES_DB: ${{ secrets.POSTGRES_DB }}
+        POSTGRES_DB: ${{ secrets.TEST_POSTGRES_DB }}
 
         JWT_PATH_PRIVATE_KEY: "./secrets/test-private.pem"
         JWT_PATH_PUBLIC_KEY: "./secrets/test-public.pem"
