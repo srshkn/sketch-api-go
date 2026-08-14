@@ -14,9 +14,8 @@ const (
 	pathPublicKeyEnv        string = "JWT_PATH_PUBLIC_KEY"
 	accessExpiresMinutesEnv string = "ACCESS_EXPIRES_MINUTES"
 	refreshExpiresDaysEnv   string = "REFRESH_EXPIRES_DAYS"
-	// refreshCookieNameEnv    string = "REFRESH_COOKIE_NAME"
-	issuerEnv   string = "JWT_ISSUER"
-	audienceEnv string = "JWT_AUDIENCE"
+	issuerEnv               string = "JWT_ISSUER"
+	audienceEnv             string = "JWT_AUDIENCE"
 )
 
 type JWT interface {
@@ -24,7 +23,6 @@ type JWT interface {
 	PublicKey() *rsa.PublicKey
 	AccessExpiresMinutes() int
 	RefreshExpiresMinutes() int
-	// RefreshCookieName() string
 	Issuer() string
 	Audience() string
 }
@@ -36,7 +34,6 @@ type configJWT struct {
 	accessExpiresMinutes  int
 	refreshExpiresMinutes int
 
-	// refreshCookieName string
 	issuer   string
 	audience string
 }
@@ -57,10 +54,6 @@ func (j *configJWT) RefreshExpiresMinutes() int {
 	return j.refreshExpiresMinutes
 }
 
-// func (j *configJWT) RefreshCookieName() string {
-// 	 return j.refreshCookieName
-// }
-
 func (j *configJWT) Issuer() string {
 	return j.issuer
 }
@@ -71,8 +64,6 @@ func (j *configJWT) Audience() string {
 
 func (j *configJWT) validateJWT() error {
 	switch {
-	// case j.refreshCookieName == "":
-	//	 return fmt.Errorf("environment variable %q is required", refreshCookieNameEnv)
 	case j.issuer == "":
 		return fmt.Errorf("environment variable %q is required", issuerEnv)
 	case j.audience == "":
@@ -232,7 +223,6 @@ func (j *configJWT) loadMinutes() error {
 
 func newJWTConfig() (*configJWT, error) {
 	token := configJWT{
-		// refreshCookieName: os.Getenv(refreshCookieNameEnv),
 		issuer:   os.Getenv(issuerEnv),
 		audience: os.Getenv(audienceEnv),
 	}

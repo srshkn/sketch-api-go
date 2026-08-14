@@ -46,6 +46,16 @@ func main() {
 	logger := logging.New(cfg.Logger())
 
 	// -------------------------------------------------------------------------
+	// JWT manager
+
+	jwtManager := token.New(cfg.JWT())
+
+	// -------------------------------------------------------------------------
+	// Cookie manager
+
+	cookieManager := cookie.New(cfg.Cookie())
+
+	// -------------------------------------------------------------------------
 	// Postgres
 
 	pool, err := postgres.NewPool(ctx, cfg.Postgres())
@@ -59,13 +69,6 @@ func main() {
 	defer pool.Close()
 
 	queries := db.New(pool)
-
-	// -------------------------------------------------------------------------
-	// JWT manager
-
-	jwtManager := token.New(cfg.JWT())
-
-	cookieManager := cookie.New(cfg.Cookie())
 
 	// -------------------------------------------------------------------------
 	// Server
