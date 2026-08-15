@@ -165,12 +165,12 @@ func TestRegisterUserValidation(t *testing.T) {
 		{
 			name:        "missing username",
 			body:        `{"password":"secret"}`,
-			wantMessage: "name must not be empty",
+			wantMessage: "username must not be empty",
 		},
 		{
 			name:        "blank username",
 			body:        `{"username":"   ","password":"secret"}`,
-			wantMessage: "name must not be empty",
+			wantMessage: "username must not be empty",
 		},
 		{
 			name:        "missing password",
@@ -271,7 +271,7 @@ func TestRegisterUserServiceError(t *testing.T) {
 
 	router.ServeHTTP(response, request)
 
-	if response.Code != http.StatusBadRequest {
+	if response.Code != http.StatusInternalServerError {
 		t.Fatalf(
 			"status code = %d, want %d",
 			response.Code,
