@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"os"
 	"strconv"
+	"time"
 )
 
 const (
@@ -21,7 +22,7 @@ const (
 type JWT interface {
 	PrivateKey() *rsa.PrivateKey
 	PublicKey() *rsa.PublicKey
-	AccessExpiresMinutes() int
+	AccessExpiresMinutes() time.Duration
 	RefreshExpiresMinutes() int
 	Issuer() string
 	Audience() string
@@ -31,7 +32,7 @@ type configJWT struct {
 	privateKey *rsa.PrivateKey
 	publicKey  *rsa.PublicKey
 
-	accessExpiresMinutes  int
+	accessExpiresMinutes  time.Duration
 	refreshExpiresMinutes int
 
 	issuer   string
@@ -46,7 +47,7 @@ func (j *configJWT) PublicKey() *rsa.PublicKey {
 	return j.publicKey
 }
 
-func (j *configJWT) AccessExpiresMinutes() int {
+func (j *configJWT) AccessExpiresMinutes() time.Duration {
 	return j.accessExpiresMinutes
 }
 
@@ -215,7 +216,7 @@ func (j *configJWT) loadMinutes() error {
 		)
 	}
 
-	j.accessExpiresMinutes = accessExpiresMinutes
+	j.accessExpiresMinutes = time.Duration(accessExpiresMinutes)
 	j.refreshExpiresMinutes = refreshExpiresDays
 
 	return nil

@@ -13,21 +13,9 @@ import (
 	"sketch-api-go/internal/config"
 )
 
-type AccessToken string
-type RefreshToken string
-
-type TokenPair struct {
-	AccessToken  AccessToken
-	RefreshToken RefreshToken
-	ExpiresAt    time.Time
-}
-
-func (t TokenPair) GetAccessToken() string {
-	return string(t.AccessToken)
-}
-
-func (t TokenPair) GetRefreshToken() string {
-	return string(t.RefreshToken)
+type RefreshToken struct {
+	Token     string
+	ExpiresAt time.Time
 }
 
 const (
@@ -36,10 +24,10 @@ const (
 )
 
 type JWTManager interface {
-	GenerateRefreshToken() (RefreshToken, error)
-	CreateAccessToken(userID string) (AccessToken, error)
+	GenerateRefreshToken() (string, error)
+	CreateAccessToken(userID string) (string, error)
 	ValidateAccessToken(tokenString string) (*claims, error)
-	HashToken(refreshToken RefreshToken) string
+	HashToken(refreshToken string) string
 	RefreshTokenExpiresAt() time.Time
 }
 
@@ -50,13 +38,13 @@ type claims struct {
 	jwt.RegisteredClaims
 }
 
-func newClaims(userID, tokenType, issuer string, accessMinutes int) *claims {
+func newClaims(userID, tokenType, issuer string, accessMinutes time.Duration) *claims {
 	return &claims{
 		UserID:    userID,
 		TokenType: tokenType,
 
 		RegisteredClaims: jwt.RegisteredClaims{
-			ExpiresAt: jwt.NewNumericDate(time.Now().Add(time.Duration(accessMinutes) * time.Minute)),
+			ExpiresAt: jwt.NewNumericDate(time.Now().Add(accessMinutes * time.Minute)),
 			IssuedAt:  jwt.NewNumericDate(time.Now()),
 			Issuer:    issuer,
 			Subject:   userID,
@@ -78,7 +66,7 @@ func New(cfg config.JWT) *manager {
 	}
 }
 
-func (m *manager) CreateAccessToken(userID string) (AccessToken, error) {
+func (m *manager) CreateAccessToken(userID string) (string, error) {
 	claim := newClaims(
 		userID,
 		m.accessName,
@@ -90,10 +78,10 @@ func (m *manager) CreateAccessToken(userID string) (AccessToken, error) {
 
 	accessToken, err := token.SignedString(m.config.PrivateKey())
 	if err != nil {
-		return AccessToken(accessToken), err
+		return accessToken, err
 	}
 
-	return AccessToken(accessToken), nil
+	return accessToken, nil
 }
 
 func (m *manager) ValidateAccessToken(tokenString string) (*claims, error) {
@@ -101,13 +89,12 @@ func (m *manager) ValidateAccessToken(tokenString string) (*claims, error) {
 		tokenString,
 		&claims{},
 		func(token *jwt.Token) (any, error) {
-			if _, ok := token.Method.(*jwt.SigningMethodRSA); !ok {
+			if token.Method != jwt.SigningMethodRS256 {
 				return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
 			}
 			return m.config.PublicKey(), nil
 		},
 	)
-
 	if err != nil {
 		return nil, err
 	}
@@ -117,20 +104,24 @@ func (m *manager) ValidateAccessToken(tokenString string) (*claims, error) {
 		return nil, jwt.ErrTokenInvalidClaims
 	}
 
+	if claims.TokenType != Access {
+		return nil, fmt.Errorf("invalid token type")
+	}
+
 	return claims, nil
 }
 
-func (_ *manager) GenerateRefreshToken() (RefreshToken, error) {
+func (_ *manager) GenerateRefreshToken() (string, error) {
 	bytes := make([]byte, 48)
 
 	if _, err := rand.Read(bytes); err != nil {
 		return "", fmt.Errorf("failed to generate refresh token: %w", err)
 	}
 
-	return RefreshToken(base64.RawURLEncoding.EncodeToString(bytes)), nil
+	return base64.RawURLEncoding.EncodeToString(bytes), nil
 }
 
-func (_ *manager) HashToken(refreshToken RefreshToken) string {
+func (_ *manager) HashToken(refreshToken string) string {
 	hash := sha256.Sum256([]byte(refreshToken))
 	return hex.EncodeToString(hash[:])
 }

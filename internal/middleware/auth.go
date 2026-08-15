@@ -4,9 +4,10 @@ import (
 	"context"
 	"errors"
 	"net/http"
+	"strings"
+
 	v1Generated "sketch-api-go/internal/generated/v1"
 	"sketch-api-go/internal/token"
-	"strings"
 )
 
 const (
@@ -38,14 +39,11 @@ func AuthMiddleware(tokenManager token.JWTManager) v1Generated.MiddlewareFunc {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			scopes := r.Context().Value(v1Generated.BearerAuthScopes)
 
-			// Если operation не требует BearerAuth —
-			// пропускаем запрос.
 			if scopes == nil {
 				next.ServeHTTP(w, r)
 				return
 			}
 
-			// Здесь уже проверяем JWT.
 			tokenString, err := extractBearerToken(r.Header.Get("Authorization"))
 			if err != nil {
 				http.Error(w, "unauthorized", http.StatusUnauthorized)
