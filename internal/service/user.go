@@ -14,9 +14,13 @@ import (
 	"github.com/google/uuid"
 )
 
+var (
+	ErrUserAlreadyExists = errors.New("user already exists")
+)
+
 type User interface {
-	Registration(ctx context.Context, request v1Generated.RegisterUserRequest) (db.CreateUserRow, error)
-	GetUser(ctx context.Context, rowUserID string) (db.GetUserByIDRow, error)
+	Registration(ctx context.Context, request v1Generated.RegisterUserRequest) (v1Generated.UserResponse, error)
+	GetUser(ctx context.Context, rowUserID string) (v1Generated.UserResponse, error)
 }
 
 type userService struct {
@@ -43,11 +47,11 @@ func (u *userService) validateCreateUser(
 	)
 
 	if emailUser == user.Email {
-		return errors.New("пользователь с такой почтой уже существует")
+		return errors.New("a user with this email already exists")
 	}
 
 	if userRow.Username == user.Username {
-		return errors.New("пользователь с таким именем уже существует")
+		return errors.New("a user with that username already exists")
 	}
 
 	return nil
@@ -56,44 +60,54 @@ func (u *userService) validateCreateUser(
 func (u *userService) Registration(
 	ctx context.Context,
 	request v1Generated.RegisterUserRequest,
-) (db.CreateUserRow, error) {
-	var createUser db.CreateUserRow
+) (v1Generated.UserResponse, error) {
+	var response v1Generated.UserResponse
 
 	if err := u.validateCreateUser(ctx, request); err != nil {
-		return createUser, err
+		return response, err
 	}
 
 	hash, err := password.Hash(request.Password)
 	if err != nil {
-		return createUser, err
+		return response, err
 	}
 
-	user := db.CreateUserParams{
-		Username:     request.Username,
-		Email:        strings.ToLower(string(request.Email)),
-		PasswordHash: hash,
-	}
-
-	createUser, err = u.repository.CreateUser(ctx, user)
+	createUser, err := u.repository.CreateUser(
+		ctx,
+		db.CreateUserParams{
+			Username:     request.Username,
+			Email:        strings.ToLower(string(request.Email)),
+			PasswordHash: hash,
+		},
+	)
 	if err != nil {
-		return createUser, err
+		return response, err
 	}
 
-	return createUser, nil
+	response.Id = createUser.ID
+	response.Username = createUser.Username
+
+	return response, nil
 }
 
-func (u *userService) GetUser(ctx context.Context, rowUserID string) (db.GetUserByIDRow, error) {
-	var user db.GetUserByIDRow
+func (u *userService) GetUser(
+	ctx context.Context,
+	rowUserID string,
+) (v1Generated.UserResponse, error) {
+	var response v1Generated.UserResponse
 
 	userID, err := uuid.Parse(rowUserID)
 	if err != nil {
-		return user, err
+		return response, err
 	}
 
-	user, err = u.repository.GetUserByID(ctx, uuid.UUID(userID))
+	user, err := u.repository.GetUserByID(ctx, uuid.UUID(userID))
 	if err != nil {
-		return user, err
+		return response, err
 	}
 
-	return user, nil
+	response.Id = user.ID
+	response.Username = user.Username
+
+	return response, nil
 }

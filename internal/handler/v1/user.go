@@ -2,6 +2,7 @@ package v1
 
 import (
 	"encoding/json"
+	"errors"
 	"log/slog"
 	"net/http"
 	"strings"
@@ -48,7 +49,7 @@ func (u *UserHandler) RegisterUser(
 			w,
 			http.StatusBadRequest,
 			v1Generated.INVALIDREQUEST,
-			"name must not be empty",
+			"username must not be empty",
 		)
 		return
 	}
@@ -63,7 +64,17 @@ func (u *UserHandler) RegisterUser(
 		return
 	}
 
-	req, err := u.service.Registration(r.Context(), v1Generated.RegisterUserRequest{
+	if request.Password != request.Confirmation {
+		writeError(
+			w,
+			http.StatusBadRequest,
+			v1Generated.INVALIDREQUEST,
+			"password and confirmation do not match",
+		)
+		return
+	}
+
+	response, err := u.service.Registration(r.Context(), v1Generated.RegisterUserRequest{
 		Confirmation: request.Confirmation,
 		Email:        request.Email,
 		Password:     request.Password,
@@ -74,19 +85,29 @@ func (u *UserHandler) RegisterUser(
 			"user registration failed",
 			slog.Any("error", err),
 		)
+		switch {
+		case errors.Is(err, service.ErrUserAlreadyExists):
+			writeError(
+				w,
+				http.StatusConflict,
+				v1Generated.NOTFOUND,
+				"a user with that name or email already exists",
+			)
+		default:
+			slog.Error(
+				"user registration failed",
+				slog.Any("error", err),
+			)
 
-		writeError(
-			w,
-			http.StatusBadRequest,
-			v1Generated.INVALIDREQUEST,
-			"password must not be empty",
-		)
+			writeError(
+				w,
+				http.StatusInternalServerError,
+				v1Generated.INTERNALERROR,
+				"internal server error",
+			)
+		}
+
 		return
-	}
-
-	response := v1Generated.UserResponse{
-		Id:       req.ID,
-		Username: req.Username,
 	}
 
 	writeJSON(w, http.StatusCreated, response)
@@ -99,7 +120,7 @@ func (u *UserHandler) GetMe(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	user, err := u.service.GetUser(r.Context(), userID)
+	response, err := u.service.GetUser(r.Context(), userID)
 	if err != nil {
 		slog.Error(
 			"user registration failed",
@@ -113,11 +134,6 @@ func (u *UserHandler) GetMe(w http.ResponseWriter, r *http.Request) {
 			"password must not be empty",
 		)
 		return
-	}
-
-	response := v1Generated.UserResponse{
-		Id:       user.ID,
-		Username: user.Username,
 	}
 
 	writeJSON(w, http.StatusCreated, response)

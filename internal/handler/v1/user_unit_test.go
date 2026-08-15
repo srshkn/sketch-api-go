@@ -11,7 +11,6 @@ import (
 
 	"github.com/google/uuid"
 
-	"sketch-api-go/internal/db"
 	"sketch-api-go/internal/service"
 
 	v1Generated "sketch-api-go/internal/generated/v1"
@@ -21,25 +20,25 @@ type userServiceStub struct {
 	registrationFn func(
 		context.Context,
 		v1Generated.RegisterUserRequest,
-	) (db.CreateUserRow, error)
+	) (v1Generated.UserResponse, error)
 
 	getUserFn func(
 		context.Context,
 		string,
-	) (db.GetUserByIDRow, error)
+	) (v1Generated.UserResponse, error)
 }
 
 func (s userServiceStub) Registration(
 	ctx context.Context,
 	request v1Generated.RegisterUserRequest,
-) (db.CreateUserRow, error) {
+) (v1Generated.UserResponse, error) {
 	return s.registrationFn(ctx, request)
 }
 
 func (s userServiceStub) GetUser(
 	ctx context.Context,
 	userID string,
-) (db.GetUserByIDRow, error) {
+) (v1Generated.UserResponse, error) {
 	return s.getUserFn(ctx, userID)
 }
 
@@ -60,20 +59,12 @@ func TestRegisterUser(t *testing.T) {
 		registrationFn: func(
 			ctx context.Context,
 			request v1Generated.RegisterUserRequest,
-		) (db.CreateUserRow, error) {
+		) (v1Generated.UserResponse, error) {
 			if request.Username != "Alice" {
 				t.Errorf(
 					"username = %q, want %q",
 					request.Username,
 					"Alice",
-				)
-			}
-
-			if request.Email != "alice@example.com" {
-				t.Errorf(
-					"email = %q, want %q",
-					request.Email,
-					"alice@example.com",
 				)
 			}
 
@@ -85,10 +76,9 @@ func TestRegisterUser(t *testing.T) {
 				)
 			}
 
-			return db.CreateUserRow{
-				ID:       wantID,
+			return v1Generated.UserResponse{
+				Id:       wantID,
 				Username: request.Username,
-				Email:    string(request.Email),
 			}, nil
 		},
 	}
@@ -151,9 +141,9 @@ func TestRegisterUserValidation(t *testing.T) {
 		registrationFn: func(
 			ctx context.Context,
 			request v1Generated.RegisterUserRequest,
-		) (db.CreateUserRow, error) {
+		) (v1Generated.UserResponse, error) {
 			serviceCalled = true
-			return db.CreateUserRow{}, nil
+			return v1Generated.UserResponse{}, nil
 		},
 	}
 
@@ -257,8 +247,8 @@ func TestRegisterUserServiceError(t *testing.T) {
 		registrationFn: func(
 			ctx context.Context,
 			request v1Generated.RegisterUserRequest,
-		) (db.CreateUserRow, error) {
-			return db.CreateUserRow{}, errors.New("database error")
+		) (v1Generated.UserResponse, error) {
+			return v1Generated.UserResponse{}, errors.New("database error")
 		},
 	}
 
