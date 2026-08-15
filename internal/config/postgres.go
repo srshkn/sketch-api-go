@@ -129,7 +129,10 @@ func newPostgresConfig() (*configPostgres, error) {
 
 	maxOpenConnsStr := os.Getenv(maxOpenConnsEnv)
 	if maxOpenConnsStr == "" {
-		return &postgres, fmt.Errorf("")
+		return &postgres, fmt.Errorf(
+			"environment variable %q is required",
+			maxOpenConnsEnv,
+		)
 	}
 
 	maxOpenConns, err := strconv.Atoi(maxOpenConnsStr)
@@ -142,7 +145,10 @@ func newPostgresConfig() (*configPostgres, error) {
 
 	minOpenConnsStr := os.Getenv(minOpenConnsEnv)
 	if minOpenConnsStr == "" {
-		return &postgres, fmt.Errorf("")
+		return &postgres, fmt.Errorf(
+			"environment variable %q is required",
+			minOpenConnsEnv,
+		)
 	}
 
 	minOpenConns, err := strconv.Atoi(minOpenConnsStr)
@@ -155,7 +161,10 @@ func newPostgresConfig() (*configPostgres, error) {
 
 	connMaxLifetimeStr := os.Getenv(connMaxLifetimeEnv)
 	if connMaxLifetimeStr == "" {
-		return &postgres, fmt.Errorf("")
+		return &postgres, fmt.Errorf(
+			"environment variable %q is required",
+			connMaxLifetimeEnv,
+		)
 	}
 
 	connMaxLifetime, err := strconv.Atoi(connMaxLifetimeStr)
@@ -168,7 +177,10 @@ func newPostgresConfig() (*configPostgres, error) {
 
 	maxConnIdleTimeStr := os.Getenv(maxConnIdleTimeEnv)
 	if maxConnIdleTimeStr == "" {
-		return &postgres, fmt.Errorf("")
+		return &postgres, fmt.Errorf(
+			"environment variable %q is required",
+			maxConnIdleTimeEnv,
+		)
 	}
 
 	maxConnIdleTime, err := strconv.Atoi(maxConnIdleTimeStr)

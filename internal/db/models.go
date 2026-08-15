@@ -19,9 +19,17 @@ type RefreshToken struct {
 	Revoked   bool      `json:"revoked"`
 }
 
+type Role struct {
+	ID   int16  `json:"id"`
+	Name string `json:"name"`
+}
+
 type User struct {
 	ID           uuid.UUID `json:"id"`
 	Username     string    `json:"username"`
 	PasswordHash string    `json:"password_hash"`
 	Email        string    `json:"email"`
+	RoleID       int16     `json:"role_id"`
+	CreatedAt    time.Time `json:"created_at"`
+	UpdatedAt    time.Time `json:"updated_at"`
 }

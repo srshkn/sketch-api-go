@@ -9,7 +9,7 @@ import (
 )
 
 type User interface {
+	CheckUserExists(ctx context.Context, arg db.CheckUserExistsParams) (db.CheckUserExistsRow, error)
 	CreateUser(ctx context.Context, arg db.CreateUserParams) (db.CreateUserRow, error)
-	GetUserByEmailOrUsername(ctx context.Context, arg db.GetUserByEmailOrUsernameParams) (db.GetUserByEmailOrUsernameRow, error)
 	GetUserByID(ctx context.Context, id uuid.UUID) (db.GetUserByIDRow, error)
 }

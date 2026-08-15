@@ -11,16 +11,14 @@ import (
 )
 
 type Querier interface {
+	CheckUserExists(ctx context.Context, arg CheckUserExistsParams) (CheckUserExistsRow, error)
 	CreateRefreshToken(ctx context.Context, arg CreateRefreshTokenParams) (uuid.UUID, error)
 	CreateUser(ctx context.Context, arg CreateUserParams) (CreateUserRow, error)
 	DeleteTokenHash(ctx context.Context, tokenHash string) error
-	DeleteUser(ctx context.Context, id uuid.UUID) error
 	GetTokenHash(ctx context.Context, tokenHash string) (RefreshToken, error)
 	GetTokenUserID(ctx context.Context, userID uuid.UUID) (GetTokenUserIDRow, error)
-	GetUserByEmail(ctx context.Context, lower string) (GetUserByEmailRow, error)
-	GetUserByEmailOrUsername(ctx context.Context, arg GetUserByEmailOrUsernameParams) (GetUserByEmailOrUsernameRow, error)
 	GetUserByID(ctx context.Context, id uuid.UUID) (GetUserByIDRow, error)
-	ListUsers(ctx context.Context) ([]ListUsersRow, error)
+	GetUserByLogin(ctx context.Context, email string) (GetUserByLoginRow, error)
 }
 
 var _ Querier = (*Queries)(nil)

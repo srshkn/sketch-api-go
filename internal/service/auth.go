@@ -42,7 +42,7 @@ func (a *authService) Login(
 ) (token.TokenPair, error) {
 	var tokenPair token.TokenPair
 
-	user, err := a.repository.GetUserByEmail(ctx, strings.ToLower(string(request.Email)))
+	user, err := a.repository.GetUserByLogin(ctx, strings.ToLower(string(request.Email)))
 	if err != nil {
 		return tokenPair, err
 	}

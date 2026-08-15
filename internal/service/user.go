@@ -34,11 +34,11 @@ func (u *userService) validateCreateUser(
 	userRow v1Generated.RegisterUserRequest,
 ) error {
 	emailUser := strings.ToLower(string(userRow.Email))
-	user, _ := u.repository.GetUserByEmailOrUsername(
+	user, _ := u.repository.CheckUserExists(
 		ctx,
-		db.GetUserByEmailOrUsernameParams{
+		db.CheckUserExistsParams{
 			Username: userRow.Username,
-			Lower:    emailUser,
+			Email:    emailUser,
 		},
 	)
 

@@ -9,20 +9,57 @@ import (
 	"context"
 
 	"github.com/google/uuid"
+	"github.com/jackc/pgx/v5/pgtype"
 )
 
+const checkUserExists = `-- name: CheckUserExists :one
+SELECT id, username, email
+FROM users
+WHERE username = $1 OR email = $2
+LIMIT 1
+`
+
+type CheckUserExistsParams struct {
+	Username string `json:"username"`
+	Email    string `json:"email"`
+}
+
+type CheckUserExistsRow struct {
+	ID       uuid.UUID `json:"id"`
+	Username string    `json:"username"`
+	Email    string    `json:"email"`
+}
+
+func (q *Queries) CheckUserExists(ctx context.Context, arg CheckUserExistsParams) (CheckUserExistsRow, error) {
+	row := q.db.QueryRow(ctx, checkUserExists, arg.Username, arg.Email)
+	var i CheckUserExistsRow
+	err := row.Scan(&i.ID, &i.Username, &i.Email)
+	return i, err
+}
+
 const createUser = `-- name: CreateUser :one
-INSERT INTO users (
-    username,
-    email,
-    password_hash
+WITH new_user AS (
+    INSERT INTO users (
+        username,
+        email,
+        password_hash,
+        role_id
+    )
+    VALUES (
+        $1,
+        $2,
+        $3,
+        (SELECT id FROM roles WHERE name = 'user')
+    )
+    RETURNING id, username, email, role_id
 )
-VALUES (
-    $1,
-    $2,
-    $3
-)
-RETURNING id, username, email
+SELECT
+    u.id,
+    u.username,
+    u.email,
+    r.name AS role
+FROM new_user u
+JOIN roles r ON r.id = u.role_id
 `
 
 type CreateUserParams struct {
@@ -35,122 +72,77 @@ type CreateUserRow struct {
 	ID       uuid.UUID `json:"id"`
 	Username string    `json:"username"`
 	Email    string    `json:"email"`
+	Role     string    `json:"role"`
 }
 
 func (q *Queries) CreateUser(ctx context.Context, arg CreateUserParams) (CreateUserRow, error) {
 	row := q.db.QueryRow(ctx, createUser, arg.Username, arg.Email, arg.PasswordHash)
 	var i CreateUserRow
-	err := row.Scan(&i.ID, &i.Username, &i.Email)
-	return i, err
-}
-
-const deleteUser = `-- name: DeleteUser :exec
-DELETE FROM users
-WHERE id = $1
-`
-
-func (q *Queries) DeleteUser(ctx context.Context, id uuid.UUID) error {
-	_, err := q.db.Exec(ctx, deleteUser, id)
-	return err
-}
-
-const getUserByEmail = `-- name: GetUserByEmail :one
-SELECT id, username, email, password_hash
-FROM users
-WHERE LOWER(email) = LOWER($1)
-`
-
-type GetUserByEmailRow struct {
-	ID           uuid.UUID `json:"id"`
-	Username     string    `json:"username"`
-	Email        string    `json:"email"`
-	PasswordHash string    `json:"password_hash"`
-}
-
-func (q *Queries) GetUserByEmail(ctx context.Context, lower string) (GetUserByEmailRow, error) {
-	row := q.db.QueryRow(ctx, getUserByEmail, lower)
-	var i GetUserByEmailRow
 	err := row.Scan(
 		&i.ID,
 		&i.Username,
 		&i.Email,
-		&i.PasswordHash,
+		&i.Role,
 	)
 	return i, err
 }
 
-const getUserByEmailOrUsername = `-- name: GetUserByEmailOrUsername :one
-SELECT id, username, email
-FROM users
-WHERE username = $1 OR LOWER(email) = LOWER($2)
-LIMIT 1
-`
-
-type GetUserByEmailOrUsernameParams struct {
-	Username string `json:"username"`
-	Lower    string `json:"lower"`
-}
-
-type GetUserByEmailOrUsernameRow struct {
-	ID       uuid.UUID `json:"id"`
-	Username string    `json:"username"`
-	Email    string    `json:"email"`
-}
-
-func (q *Queries) GetUserByEmailOrUsername(ctx context.Context, arg GetUserByEmailOrUsernameParams) (GetUserByEmailOrUsernameRow, error) {
-	row := q.db.QueryRow(ctx, getUserByEmailOrUsername, arg.Username, arg.Lower)
-	var i GetUserByEmailOrUsernameRow
-	err := row.Scan(&i.ID, &i.Username, &i.Email)
-	return i, err
-}
-
 const getUserByID = `-- name: GetUserByID :one
-SELECT id, username, email
-FROM users
-WHERE id = $1
+SELECT
+    u.id,
+    u.username,
+    u.email,
+    r.name AS role
+FROM users AS u
+LEFT JOIN roles AS r ON r.id = u.role_id
+WHERE u.id = $1
 `
 
 type GetUserByIDRow struct {
-	ID       uuid.UUID `json:"id"`
-	Username string    `json:"username"`
-	Email    string    `json:"email"`
+	ID       uuid.UUID   `json:"id"`
+	Username string      `json:"username"`
+	Email    string      `json:"email"`
+	Role     pgtype.Text `json:"role"`
 }
 
 func (q *Queries) GetUserByID(ctx context.Context, id uuid.UUID) (GetUserByIDRow, error) {
 	row := q.db.QueryRow(ctx, getUserByID, id)
 	var i GetUserByIDRow
-	err := row.Scan(&i.ID, &i.Username, &i.Email)
+	err := row.Scan(
+		&i.ID,
+		&i.Username,
+		&i.Email,
+		&i.Role,
+	)
 	return i, err
 }
 
-const listUsers = `-- name: ListUsers :many
-SELECT id, username, email
-FROM users
-ORDER BY username
+const getUserByLogin = `-- name: GetUserByLogin :one
+SELECT
+    u.id,
+    u.email,
+    u.password_hash,
+    r.name AS role
+FROM users AS u
+LEFT JOIN roles AS r ON r.id = u.role_id
+WHERE u.email = $1
 `
 
-type ListUsersRow struct {
-	ID       uuid.UUID `json:"id"`
-	Username string    `json:"username"`
-	Email    string    `json:"email"`
+type GetUserByLoginRow struct {
+	ID           uuid.UUID   `json:"id"`
+	Email        string      `json:"email"`
+	PasswordHash string      `json:"password_hash"`
+	Role         pgtype.Text `json:"role"`
 }
 
-func (q *Queries) ListUsers(ctx context.Context) ([]ListUsersRow, error) {
-	rows, err := q.db.Query(ctx, listUsers)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-	items := []ListUsersRow{}
-	for rows.Next() {
-		var i ListUsersRow
-		if err := rows.Scan(&i.ID, &i.Username, &i.Email); err != nil {
-			return nil, err
-		}
-		items = append(items, i)
-	}
-	if err := rows.Err(); err != nil {
-		return nil, err
-	}
-	return items, nil
+func (q *Queries) GetUserByLogin(ctx context.Context, email string) (GetUserByLoginRow, error) {
+	row := q.db.QueryRow(ctx, getUserByLogin, email)
+	var i GetUserByLoginRow
+	err := row.Scan(
+		&i.ID,
+		&i.Email,
+		&i.PasswordHash,
+		&i.Role,
+	)
+	return i, err
 }

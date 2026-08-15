@@ -10,7 +10,7 @@ import (
 
 type Auth interface {
 	CreateRefreshToken(ctx context.Context, arg db.CreateRefreshTokenParams) (uuid.UUID, error)
-	GetUserByEmail(ctx context.Context, lower string) (db.GetUserByEmailRow, error)
+	GetUserByLogin(ctx context.Context, email string) (db.GetUserByLoginRow, error)
 	DeleteTokenHash(ctx context.Context, tokenHash string) error
 	GetTokenHash(ctx context.Context, tokenHash string) (db.RefreshToken, error)
 	GetTokenUserID(ctx context.Context, userID uuid.UUID) (db.GetTokenUserIDRow, error)
