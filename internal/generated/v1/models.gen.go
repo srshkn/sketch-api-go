@@ -63,11 +63,6 @@ type LoginUserRequest struct {
 	Password string              `json:"password"`
 }
 
-// RefreshRequest defines model for RefreshRequest.
-type RefreshRequest struct {
-	RefreshToken string `json:"refresh_token"`
-}
-
 // RegisterUserRequest defines model for RegisterUserRequest.
 type RegisterUserRequest struct {
 	Confirmation string              `json:"confirmation"`
@@ -92,9 +87,6 @@ type bearerAuthContextKey string
 
 // LoginUserJSONRequestBody defines body for LoginUser for application/json ContentType.
 type LoginUserJSONRequestBody = LoginUserRequest
-
-// UpdateRefreshTokenJSONRequestBody defines body for UpdateRefreshToken for application/json ContentType.
-type UpdateRefreshTokenJSONRequestBody = RefreshRequest
 
 // RegisterUserJSONRequestBody defines body for RegisterUser for application/json ContentType.
 type RegisterUserJSONRequestBody = RegisterUserRequest

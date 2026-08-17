@@ -136,5 +136,5 @@ func (u *UserHandler) GetMe(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	writeJSON(w, http.StatusCreated, response)
+	writeJSON(w, http.StatusOK, response)
 }

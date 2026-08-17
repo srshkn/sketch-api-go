@@ -144,3 +144,7 @@ func (s *serverApp) Run(ctx context.Context) error {
 
 	}
 }
+
+func (s *serverApp) Handler() http.Handler {
+	return s.server.Handler
+}

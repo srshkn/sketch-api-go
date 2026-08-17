@@ -1,10 +1,11 @@
-package v1
+package test
 
 import (
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
 	v1Generated "sketch-api-go/internal/generated/v1"
+	v1 "sketch-api-go/internal/handler/v1"
 	"sketch-api-go/internal/service"
 	"strings"
 	"testing"
@@ -15,10 +16,10 @@ import (
 func TestRegisterUserIntegration(t *testing.T) {
 	svc := service.NewUserService(testDB)
 
-	handler := NewUserHandler(svc)
+	handler := v1.NewUserHandler(svc)
 
-	router := New(
-		NewMetaHandler(),
+	router := v1.New(
+		v1.NewMetaHandler(),
 		handler,
 		nil,
 	)
@@ -32,10 +33,10 @@ func TestRegisterUserIntegration(t *testing.T) {
 		http.MethodPost,
 		"/user/register",
 		strings.NewReader(`{
-			"username": "Alice",
-			"email": "alice@example.com",
-			"password": "secret123",
-			"confirmation": "secret123"
+			"username": "Ben",
+			"email": "benben@example.com",
+			"password": "secret321",
+			"confirmation": "secret321"
 		}`),
 	)
 
@@ -60,11 +61,11 @@ func TestRegisterUserIntegration(t *testing.T) {
 		t.Fatalf("decode response: %v", err)
 	}
 
-	if response.Username != "Alice" {
+	if response.Username != "Ben" {
 		t.Errorf(
 			"username = %q, want %q",
 			response.Username,
-			"Alice",
+			"Ben",
 		)
 	}
 
@@ -80,19 +81,19 @@ func TestRegisterUserIntegration(t *testing.T) {
 		t.Fatal("response id is empty")
 	}
 
-	if user.Email != "alice@example.com" {
+	if user.Email != "benben@example.com" {
 		t.Errorf(
 			"email = %q, want %q",
 			user.Email,
-			"alice@example.com",
+			"benben@example.com",
 		)
 	}
 
-	if user.Username != "Alice" {
+	if user.Username != "Ben" {
 		t.Errorf(
 			"database username = %q, want %q",
 			user.Username,
-			"Alice",
+			"Ben",
 		)
 	}
 

@@ -105,29 +105,18 @@ func (a *AuthHandler) LogoutUser(w http.ResponseWriter, r *http.Request) {
 }
 
 func (a *AuthHandler) UpdateRefreshToken(w http.ResponseWriter, r *http.Request) {
-	var request v1Generated.RefreshRequest
-
-	if err := json.NewDecoder(r.Body).Decode(&request); err != nil {
+	cookie, err := r.Cookie(a.cookie.Name())
+	if err != nil || cookie.Value == "" {
 		writeError(
 			w,
-			http.StatusBadRequest,
+			http.StatusUnauthorized,
 			v1Generated.INVALIDREQUEST,
-			"invalid request body",
+			"refresh token is missing",
 		)
 		return
 	}
 
-	if request.RefreshToken == "" {
-		writeError(
-			w,
-			http.StatusBadRequest,
-			v1Generated.INVALIDREQUEST,
-			"name must not be empty",
-		)
-		return
-	}
-
-	response, refreshToken, err := a.service.Refresh(r.Context(), request)
+	response, refreshToken, err := a.service.Refresh(r.Context(), cookie.Value)
 	if err != nil {
 		slog.Error(
 			"user registration failed",

@@ -7,6 +7,7 @@ import (
 )
 
 type Auth interface {
+	Name() string
 	SetRefreshToken(w http.ResponseWriter, token string, expiresAt time.Time)
 	ClearRefreshToken(w http.ResponseWriter)
 }
@@ -17,6 +18,10 @@ type manager struct {
 
 func New(cfg config.Cookie) *manager {
 	return &manager{auth: cfg}
+}
+
+func (m *manager) Name() string {
+	return m.auth.RefreshTokenName()
 }
 
 func (m *manager) SetRefreshToken(

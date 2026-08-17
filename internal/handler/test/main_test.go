@@ -1,4 +1,4 @@
-package v1
+package test
 
 import (
 	"context"
@@ -9,15 +9,19 @@ import (
 	"sketch-api-go/internal/config"
 	"sketch-api-go/internal/cookie"
 	"sketch-api-go/internal/db"
+	"sketch-api-go/internal/logging"
 	"sketch-api-go/internal/testutil"
 	"sketch-api-go/internal/token"
 )
 
 var (
 	testConfig        config.Config
+	testServet        config.Server
+	testLogger        *slog.Logger
 	testDB            db.Querier
 	testJWTManager    token.JWTManager
 	testCookieManager cookie.Auth
+	testCORS          config.CORS
 )
 
 func TestMain(m *testing.M) {
@@ -36,6 +40,11 @@ func TestMain(m *testing.M) {
 	}
 
 	// -------------------------------------------------------------------------
+	// Logger
+
+	testLogger = logging.New(testConfig.Logger())
+
+	// -------------------------------------------------------------------------
 	// JWT
 
 	testJWTManager = token.New(testConfig.JWT())
@@ -44,6 +53,11 @@ func TestMain(m *testing.M) {
 	// Cookie
 
 	testCookieManager = cookie.New(testConfig.Cookie())
+
+	// -------------------------------------------------------------------------
+	// CORSCfg
+
+	testCORS = testConfig.CORS()
 
 	// -------------------------------------------------------------------------
 	// Container PostgreSQL
@@ -92,6 +106,11 @@ func TestMain(m *testing.M) {
 	}
 
 	testDB = db.New(pool)
+
+	// -------------------------------------------------------------------------
+	// ServerCofg
+
+	testServet = testConfig.Server()
 
 	// -------------------------------------------------------------------------
 	// Tests

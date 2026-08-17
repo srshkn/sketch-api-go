@@ -21,7 +21,7 @@ var ErrRefreshTokenExpired = errors.New("refresh token expired")
 type Auth interface {
 	Login(ctx context.Context, request v1Generated.LoginUserRequest) (v1Generated.TokensResponse, token.RefreshToken, error)
 	Logout(ctx context.Context, refreshToken string) error
-	Refresh(ctx context.Context, request v1Generated.RefreshRequest) (v1Generated.TokensResponse, token.RefreshToken, error)
+	Refresh(ctx context.Context, refToken string) (v1Generated.TokensResponse, token.RefreshToken, error)
 }
 
 type authService struct {
@@ -70,7 +70,7 @@ func (a *authService) Logout(ctx context.Context, refreshToken string) error {
 
 func (a *authService) Refresh(
 	ctx context.Context,
-	request v1Generated.RefreshRequest,
+	refToken string,
 ) (
 	v1Generated.TokensResponse,
 	token.RefreshToken,
@@ -80,7 +80,7 @@ func (a *authService) Refresh(
 	var refreshToken token.RefreshToken
 	var err error
 
-	tokenHash := a.tokenManager.HashToken(request.RefreshToken)
+	tokenHash := a.tokenManager.HashToken(refToken)
 
 	stored, err := a.getValidRefresh(ctx, tokenHash)
 	if err != nil {

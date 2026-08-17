@@ -21,13 +21,6 @@ components:
 
   schemas:
 
-    RefreshRequest:
-      type: object
-      required: [refresh_token]
-      properties:
-        refresh_token:
-          type: string
-
     RegisterUserRequest:
       type: object
       required: [username, email, password, confirmation]
@@ -267,13 +260,7 @@ paths:
       summary: "Обновление рефреш токена."
       description: "..."
       operationId: updateRefreshToken
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/RefreshRequest'
-
+    
       responses:
         '200':
           description: Пользователь вошёл
