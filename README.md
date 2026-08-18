@@ -1,5 +1,23 @@
 # Sketch API Go
 
+## Содержание
+- [О проекте](#о-проекте)
+- [Технические требования](#технические-требования)
+    - [Go](#go)
+    - [Docker](#docker)
+    - [Make](#make)
+- [Быстрый запуск](#быстрый-запуск)
+- [Доступ после старта](#доступ-после-старта)
+- [Структура проекта](#структура-проекта)
+
+Дополнительная информация:
+
+- [Документация по Backend](docs/BACKEND.md);
+- [Доступные endpoints](docs/OPENAPI.md);
+- [Информация по CI/CD.md](docs/CI-CD.md)
+
+## О проекте
+
 Небольшой HTTP API на Go, построенный по подходу contract-first: публичный
 контракт описывается в OpenAPI, а модели, интерфейс сервера и встроенная
 спецификация генерируются с помощью `oapi-codegen`.
@@ -7,16 +25,37 @@
 Сейчас сервис предоставляет проверку состояния API и демонстрационный endpoint
 регистрации пользователя. После запуска доступны Swagger UI и OpenAPI-схема.
 
-Подробное описание backend и API находится в
-[docs/BACKEND.md](docs/BACKEND.md).
+## Технические требования
+
+### Go 
+Go [1.25.6](https://go.dev/dl/) или новее. 
+
+### Docker
+Docker используется для запуска приложения и PostgreSQL. Для локальной разработки удобнее всего использовать **Docker Desktop**.
+
+- **macOS:** [Инструкции по установке на Mac](https://docs.docker.com/desktop/setup/install/mac-install/)
+- **Windows:** [Инструкции по установке на Windows](https://docs.docker.com/desktop/install/windows-install/)
+- **Linux:** [Инструкции по установке на Linux](https://docs.docker.com/desktop/install/linux-install/) 
+
+### Make
+В проекте используется **Makefile**, который выступает единой точкой входа для всех базовых команд.
+
+- **macOS:** Установлен по умолчанию в составе утилит разработчика. Если команда `make` не найдена, выполните в терминале:
+```bash
+xcode-select --install
+```
+- **Windows:** Утилита `make` можно установить, выполнил команду в **PowerShell** от имени администратора:
+```powershell
+winget install GnuWin32.Make
+```
+- **Linux (Ubuntu/Debian):** Устанавливается через терминал командой:
+```bash
+sudo apt update && sudo apt install make
+```
 
 ## Быстрый запуск
 
-Требования:
-
-- Go 1.25.6 или новее;
-- Git;
-- опционально: `make` и Docker.
+### Старт
 
 Склонируйте репозиторий и перейдите в его директорию:
 
@@ -25,73 +64,23 @@ git clone <repository-url>
 cd sketch-api-go
 ```
 
-Загрузите зависимости и запустите сервер:
+При необходимости обновите зависимости:
 
 ```bash
-go mod download
-go run ./cmd/server
+go mod tidy
 ```
 
-Сервис запустится на `http://localhost:8080`.
-
-Проверить его работу можно запросом:
-
+Запустите окружение:
 ```bash
-curl http://localhost:8080/health
+make compose-dev
 ```
 
-Ожидаемый ответ:
-
-```text
-OK
-```
-
-После запуска доступны:
+### Доступ после старта:
 
 - API: `http://localhost:8080`;
 - Swagger UI: `http://localhost:8080/docs/`;
 - OpenAPI JSON: `http://localhost:8080/openapi.json`.
 
-## Запуск через Make
-
-```bash
-make run
-```
-
-Команда сначала обновит сгенерированный Go-код из `api/openapi.yml`, а затем
-запустит сервер. Список остальных команд:
-
-```bash
-make help
-```
-
-## Запуск в Docker
-
-```bash
-docker build -t sketch-api-go .
-docker run --rm --name sketch-api-go -p 8080:8080 sketch-api-go
-```
-
-Либо с помощью Make:
-
-```bash
-make docker-build
-make docker-run
-```
-
-## Тестирование
-
-Запустить все проверки пакетов:
-
-```bash
-go test ./...
-```
-
-Запустить только тесты HTTP-handlers:
-
-```bash
-go test ./internal/handlers
-```
 
 ## Структура проекта
 
@@ -131,6 +120,3 @@ sketch-api-go
 ├── LICENSE                  # лицензия проекта
 └── README.md                # описание и документация проекта
 ```
-
-Файлы в `internal/generated` не следует редактировать вручную: они
-перезаписываются при выполнении `make gen`.
