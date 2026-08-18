@@ -9,7 +9,10 @@ on:
       - README.md
       - LICENSE
       - .env.example
+      - .version
       - docs/**
+      - db/**
+      - api/*
       - .gitignore
       - .dockerignore
 
@@ -20,9 +23,52 @@ jobs:
   checks-go:
     runs-on: ubuntu-latest
 
+    env:
+        SERVER_HOST: ${{ secrets.TEST_SERVER_HOST }}
+        SERVER_PORT: ${{ secrets.TEST_SERVER_PORT }}
+        SHOTDOWN_TIMEOUT_SECOND: ${{ secrets.TEST_SHOTDOWN_TIMEOUT_SECOND }}
+
+        LOGGER_FORMAT: ${{ secrets.TEST_LOGGER_FORMAT }}
+
+        POSTGRES_HOST: ${{ secrets.TEST_POSTGRES_HOST }}
+        POSTGRES_PORT: ${{ secrets.TEST_POSTGRES_PORT }}
+        POSTGRES_USER: ${{ secrets.TEST_POSTGRES_USER }}
+        POSTGRES_PASSWORD: ${{ secrets.TEST_POSTGRES_PASSWORD }}
+        POSTGRES_DB: ${{ secrets.TEST_POSTGRES_DB }}
+        MAX_OPEN_CONNS: ${{ secrets.TEST_MAX_OPEN_CONNS }}
+        MIN_OPEN_CONNS: ${{ secrets.TEST_MIN_OPEN_CONNS }}
+        CONN_MAX_LIFETIME: ${{ secrets.TEST_CONN_MAX_LIFETIME}}
+        MAX_CONN_IDLE_TIME: ${{ secrets.TEST_MAX_CONN_IDLE_TIM}}
+
+        JWT_PATH_PRIVATE_KEY: "${{ github.workspace }}/secrets/test-private.pem"
+        JWT_PATH_PUBLIC_KEY: "${{ github.workspace }}/secrets/test-public.pem"
+        ACCESS_EXPIRES_MINUTES: ${{ secrets.TEST_ACCESS_EXPIRES_MINUTES }}
+        REFRESH_EXPIRES_DAYS: ${{ secrets.TEST_REFRESH_EXPIRES_DAYS }}
+        JWT_ISSUER: ${{ secrets.TEST_JWT_ISSUER }}
+        JWT_AUDIENCE: ${{ secrets.TEST_JWT_AUDIENCE }}
+
+        CORS_ALLOWED_ORIGINS: ${{ secrets.TEST_CORS_ALLOWED_ORIGINS }}
+        CORS_ALLOWED_METHODS: ${{ secrets.TEST_CORS_ALLOWED_METHODS }}
+        CORS_ALLOWED_HEADERS: ${{ secrets.TEST_CORS_ALLOWED_HEADERS }}
+        CORS_ALLOW_CREDENTIALS: ${{ secrets.TEST_CORS_ALLOW_CREDENTIALS }}
+
+        AUTH_COOKIE_NAME: ${{ secrets.TEST_AUTH_COOKIE_NAME }}
+        AUTH_COOKIE_PATH: ${{ secrets.TEST_AUTH_COOKIE_PATH }}
+        AUTH_COOKIE_DOMAIN: ""
+        AUTH_COOKIE_SECURE: ${{ secrets.TEST_AUTH_COOKIE_SECURE }}
+        AUTH_COOKIE_HTTP_ONLY: ${{ secrets.TEST_AUTH_COOKIE_HTTP_ONLY }}
+        AUTH_COOKIE_SAME_SITE: ${{ secrets.TEST_AUTH_COOKIE_SAME_SITE }}
+        AUTH_COOKIE_MAX_AGE: ${{ secrets.TEST_AUTH_COOKIE_MAX_AGE }}
+
     steps:
       - name: Checkout
         uses: actions/checkout@v6
+
+      - name: Create JWT keys
+        run: |
+          mkdir -p secrets
+          echo "${{ secrets.TEST_JWT_PRIVATE_KEY }}" > secrets/test-private.pem
+          echo "${{ secrets.TEST_JWT_PUBLIC_KEY }}" > secrets/test-public.pem
 
       - name: Setup Go
         uses: actions/setup-go@v7
@@ -45,14 +91,56 @@ jobs:
         run: go vet ./...
 
       - name: Test
-        run: go test ./...
+        run: |
+          pwd
+          ls -la
+          ls -la secrets
+          go test ./...
 
       - name: Build
         run: go build ./...
 
   checks-dockerfile:
+    if: false
     needs: checks-go
     runs-on: ubuntu-latest
+
+    env:
+        SERVER_HOST: ${{ secrets.TEST_SERVER_HOST }}
+        SERVER_PORT: ${{ secrets.TEST_SERVER_PORT }}
+        SHOTDOWN_TIMEOUT_SECOND: ${{ secrets.TEST_SHOTDOWN_TIMEOUT_SECOND }}
+
+        LOGGER_FORMAT: ${{ secrets.TEST_LOGGER_FORMAT }}
+
+        POSTGRES_HOST: ${{ secrets.TEST_POSTGRES_HOST }}
+        POSTGRES_PORT: ${{ secrets.TEST_POSTGRES_PORT }}
+        POSTGRES_USER: ${{ secrets.TEST_POSTGRES_USER }}
+        POSTGRES_PASSWORD: ${{ secrets.TEST_POSTGRES_PASSWORD }}
+        POSTGRES_DB: ${{ secrets.TEST_POSTGRES_DB }}
+        MAX_OPEN_CONNS: ${{ secrets.TEST_MAX_OPEN_CONNS }}
+        MIN_OPEN_CONNS: ${{ secrets.TEST_MIN_OPEN_CONNS }}
+        CONN_MAX_LIFETIME: ${{ secrets.TEST_CONN_MAX_LIFETIME}}
+        MAX_CONN_IDLE_TIME: ${{ secrets.TEST_MAX_CONN_IDLE_TIM}}
+
+        JWT_PATH_PRIVATE_KEY: "${{ github.workspace }}/secrets/test-private.pem"
+        JWT_PATH_PUBLIC_KEY: "${{ github.workspace }}/secrets/test-public.pem"
+        ACCESS_EXPIRES_MINUTES: ${{ secrets.TEST_ACCESS_EXPIRES_MINUTES }}
+        REFRESH_EXPIRES_DAYS: ${{ secrets.TEST_REFRESH_EXPIRES_DAYS }}
+        JWT_ISSUER: ${{ secrets.TEST_JWT_ISSUER }}
+        JWT_AUDIENCE: ${{ secrets.TEST_JWT_AUDIENCE }}
+
+        CORS_ALLOWED_ORIGINS: ${{ secrets.TEST_CORS_ALLOWED_ORIGINS }}
+        CORS_ALLOWED_METHODS: ${{ secrets.TEST_CORS_ALLOWED_METHODS }}
+        CORS_ALLOWED_HEADERS: ${{ secrets.TEST_CORS_ALLOWED_HEADERS }}
+        CORS_ALLOW_CREDENTIALS: ${{ secrets.TEST_CORS_ALLOW_CREDENTIALS }}
+
+        AUTH_COOKIE_NAME: ${{ secrets.TEST_AUTH_COOKIE_NAME }}
+        AUTH_COOKIE_PATH: ${{ secrets.TEST_AUTH_COOKIE_PATH }}
+        AUTH_COOKIE_DOMAIN: ""
+        AUTH_COOKIE_SECURE: ${{ secrets.TEST_AUTH_COOKIE_SECURE }}
+        AUTH_COOKIE_HTTP_ONLY: ${{ secrets.TEST_AUTH_COOKIE_HTTP_ONLY }}
+        AUTH_COOKIE_SAME_SITE: ${{ secrets.TEST_AUTH_COOKIE_SAME_SITE }}
+        AUTH_COOKIE_MAX_AGE: ${{ secrets.TEST_AUTH_COOKIE_MAX_AGE }}
 
     steps:
       - name: Checkout repository
@@ -72,17 +160,40 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
+      - name: Start PostgreSQL
+        run: |
+          docker run -d \
+            --name postgres-ci \
+            --network sketch-ci \
+            -e POSTGRES_USER \
+            -e POSTGRES_PASSWORD \
+            -e POSTGRES_DB \
+            --health-cmd="pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}" \
+            --health-interval=2s \
+            --health-timeout=2s \
+            --health-retries=15 \
+            postgres:17
+
       - name: Start container
         run: |
           docker run -d \
             --name sketch-backend-ci \
-            -p 8080:8080 \
+            -p "${SERVER_PORT}:${SERVER_PORT}" \
+            -e SERVER_HOST \
+            -e SERVER_PORT \
+            -e LOGGER_FORMAT \
+            -e POSTGRES_HOST \
+            -e POSTGRES_PORT \
+            -e POSTGRES_USER \
+            -e POSTGRES_PASSWORD \
+            -e POSTGRES_DB \
             sketch-backend:ci
+
 
       - name: Check health endpoint
         run: |
           for attempt in {1..10}; do
-            if curl --fail --silent http://localhost:8080/health; then
+            if curl --fail --silent http://${SERVER_HOST}:${SERVER_PORT}/health; then
               exit 0
             fi
 

@@ -1,0 +1,77 @@
+networks:
+  app:
+
+services:
+  db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    ports:
+      - "5433:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    networks:
+      - app
+
+  server:
+      build:
+        context: .
+        dockerfile: Dockerfile
+      restart: unless-stopped
+      #depends_on:
+      #  db:
+      #    condition: service_healthy
+      volumes:
+            - ./secrets:/app/secrets:ro
+      environment:
+        SERVER_HOST: ${SERVER_HOST}
+        SERVER_PORT: ${SERVER_PORT}
+        SHOTDOWN_TIMEOUT_SECOND: ${SHOTDOWN_TIMEOUT_SECOND}
+
+        LOGGER_FORMAT: ${LOGGER_FORMAT}
+
+        POSTGRES_HOST: ${POSTGRES_HOST}
+        POSTGRES_PORT: ${POSTGRES_PORT}
+        POSTGRES_USER: ${POSTGRES_USER}
+        POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+        POSTGRES_DB: ${POSTGRES_DB}
+        MAX_OPEN_CONNS: ${MAX_OPEN_CONNS}
+        MIN_OPEN_CONNS: ${MIN_OPEN_CONNS}
+        CONN_MAX_LIFETIME: ${CONN_MAX_LIFETIME}
+        MAX_CONN_IDLE_TIME: ${MAX_CONN_IDLE_TIME}
+
+        JWT_PATH_PRIVATE_KEY: ${JWT_PATH_PRIVATE_KEY}
+        JWT_PATH_PUBLIC_KEY: ${JWT_PATH_PUBLIC_KEY}
+
+        ACCESS_EXPIRES_MINUTES: ${ACCESS_EXPIRES_MINUTES}
+        REFRESH_EXPIRES_DAYS: ${REFRESH_EXPIRES_DAYS}
+
+
+        JWT_ISSUER: ${JWT_ISSUER}
+        JWT_AUDIENCE: ${JWT_AUDIENCE}
+
+        CORS_ALLOWED_ORIGINS: ${CORS_ALLOWED_ORIGINS}
+        CORS_ALLOWED_METHODS: ${CORS_ALLOWED_METHODS}
+        CORS_ALLOWED_HEADERS: ${CORS_ALLOWED_HEADERS}
+        CORS_ALLOW_CREDENTIALS: ${CORS_ALLOW_CREDENTIALS}
+
+        AUTH_COOKIE_NAME: ${AUTH_COOKIE_NAME}
+        AUTH_COOKIE_PATH: ${AUTH_COOKIE_PATH}
+        AUTH_COOKIE_DOMAIN: ${AUTH_COOKIE_DOMAIN}
+        AUTH_COOKIE_SECURE: ${AUTH_COOKIE_SECURE}
+        AUTH_COOKIE_HTTP_ONLY: ${AUTH_COOKIE_HTTP_ONLY}
+        AUTH_COOKIE_SAME_SITE: ${AUTH_COOKIE_SAME_SITE}
+        AUTH_COOKIE_MAX_AGE: ${AUTH_COOKIE_MAX_AGE}
+      networks:
+        - app
+
+volumes:
+  postgres_data:

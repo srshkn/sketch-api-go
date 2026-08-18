@@ -1,0 +1,6 @@
+package: v1
+
+output: internal/generated/v1/spec.gen.go
+
+generate:
+  embedded-spec: true

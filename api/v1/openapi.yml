@@ -1,0 +1,289 @@
+openapi: 3.0.3
+info:
+  title: Sketch API on GO
+  description: Тестовый API сервис написанный на Go.
+  version: "1.0.0"
+
+servers:
+  - url: /api/v1
+
+tags:
+  - name: Meta
+  - name: User
+  - name: Auth
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+
+    RegisterUserRequest:
+      type: object
+      required: [username, email, password, confirmation]
+      properties:
+        username:
+          type: string
+          minLength: 1
+        email:
+          type: string
+          format: email
+          maxLength: 254
+        password:
+          type: string
+          format: password
+          minLength: 8
+          maxLength: 128
+        confirmation:
+          type: string
+          format: password
+          minLength: 8
+          maxLength: 128
+
+    LoginUserRequest:
+      type: object
+      required: [email, password]
+      properties:
+        email:
+          type: string
+          format: email
+          maxLength: 254
+        password:
+          type: string
+          format: password
+          minLength: 8
+          maxLength: 128
+
+    UserResponse:
+      type: object
+      required: [id, username]
+      properties:
+        id:
+          type: string
+          format: uuid
+        username:
+          type: string
+
+    TokensResponse:
+      type: object
+      required: [access_token]  # refresh_token
+      properties:
+        access_token:
+          type: string
+        # refresh_token:
+        #  type: string
+
+    ErrorResponse:
+      type: object
+      required: [error]
+      properties:
+        error:
+          type: object
+          required: [code, message]
+          properties:
+            code:
+              type: string
+              enum:
+                - INVALID_REQUEST
+                - UNAUTHORIZED
+                - NOT_FOUND
+                - FORBIDDEN
+                - SCHEDULE_EXISTS
+                - INTERNAL_ERROR
+            message:
+              type: string
+      example:
+        error:
+          code: INVALID_REQUEST
+          message: invalid request
+
+    InternalErrorResponse:
+      type: object
+      required: [message]
+      properties:
+        message:
+          type: string
+
+paths:
+  /health:
+    get:
+      tags: [Meta]
+      summary: "Проверка жизни API."
+      description: >
+        Endpoint предназначен для проверки работоспособности API.
+        Возвращает "OK" и статус 200, если сервис жив.
+      operationId: getHealth
+
+      responses:
+        "200":
+          description: API работает корректно
+          content:
+            text/plain:
+              schema:
+                type: string
+                example: OK
+        "500":
+          description: Внутренняя ошибка сервера
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/InternalErrorResponse"
+
+  /user/register:
+    post:
+      tags: [User]
+      summary: "Регистрация пользователя."
+      description: "..."
+      operationId: registerUser
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RegisterUserRequest'
+
+      responses:
+        '201':
+          description: Пользователь создан
+          content:
+            application/json:
+              schema:
+                 $ref: '#/components/schemas/UserResponse'
+
+        '400':
+          description: Неверный запрос
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ErrorResponse' }
+
+        '409':
+          description: Пользователь уже существует
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+        '500':
+          description: Внутренняя ошибка сервера
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/InternalErrorResponse' }
+
+  /user/me:
+    get:
+      security:
+        - BearerAuth: []
+      tags: [User]
+      summary: "Информация о пользователе."
+      description: "..."
+      operationId: getMe
+
+      responses:
+        '200':
+          description: Информация о пользователе
+          content:
+            application/json:
+              schema:
+                 $ref: '#/components/schemas/UserResponse'
+
+        '500':
+          description: Внутренняя ошибка сервера
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/InternalErrorResponse' }
+
+  /auth/login:
+    post:
+      tags: [Auth]
+      summary: "Аутентификация пользователя."
+      description: "..."
+      operationId: loginUser
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginUserRequest'
+
+      responses:
+        '200':
+          description: Пользователь вошёл
+          content:
+            application/json:
+              schema:
+                 $ref: '#/components/schemas/TokensResponse'
+
+        '400':
+            description: Неверный запрос
+            content:
+              application/json:
+                schema: { $ref: '#/components/schemas/ErrorResponse' }
+
+        '409':
+          description: Пользователя не существует
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+        '500':
+          description: Внутренняя ошибка сервера
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/InternalErrorResponse' }
+
+  /auth/logout:
+    post:
+      security:
+        - BearerAuth: []
+      tags: [Auth]
+      summary: "Выход из аккаунта."
+      description: "..."
+      operationId: logoutUser
+
+      responses:
+        '204':
+          description: Пользователь вышел
+
+        '500':
+          description: Внутренняя ошибка сервера
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/InternalErrorResponse' }
+
+  /auth/refresh:
+    post:
+      tags: [Auth]
+      summary: "Обновление рефреш токена."
+      description: "..."
+      operationId: updateRefreshToken
+    
+      responses:
+        '200':
+          description: Пользователь вошёл
+          content:
+            application/json:
+              schema:
+                 $ref: '#/components/schemas/TokensResponse'
+
+        '400':
+            description: Неверный запрос
+            content:
+              application/json:
+                schema: { $ref: '#/components/schemas/ErrorResponse' }
+
+        '409':
+          description: Пользователя не существует
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+        '500':
+          description: Внутренняя ошибка сервера
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/InternalErrorResponse' }

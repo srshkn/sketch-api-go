@@ -1,27 +1,95 @@
 package main
 
 import (
-	"log"
-	"net/http"
+	"context"
+	"log/slog"
+	"os"
+	"os/signal"
+	"syscall"
 
-	"sketch-api-go/internal/generated"
-	handler "sketch-api-go/internal/handlers"
-	"sketch-api-go/internal/swagger"
+	"sketch-api-go/internal/app"
+	"sketch-api-go/internal/config"
+	"sketch-api-go/internal/cookie"
+	"sketch-api-go/internal/db"
+	"sketch-api-go/internal/logging"
+	"sketch-api-go/internal/postgres"
+	"sketch-api-go/internal/token"
 )
 
 func main() {
-	mux := http.NewServeMux()
 
-	apiHandler := handler.New()
+	// -------------------------------------------------------------------------
+	// Context
 
-	generated.HandlerFromMux(apiHandler, mux)
+	ctx, stop := signal.NotifyContext(
+		context.Background(),
+		os.Interrupt,
+		syscall.SIGTERM,
+	)
+	defer stop()
 
-	swagger.Register(mux)
+	// -------------------------------------------------------------------------
+	// Configuration
 
-	log.Println("API: http://localhost:8080")
-	log.Println("Swagger UI: http://localhost:8080/docs/")
+	cfg, err := config.New()
+	if err != nil {
+		slog.Error(
+			"failed to load configuration",
+			slog.Any("error", err),
+		)
+		os.Exit(1)
+	}
 
-	if err := http.ListenAndServe(":8080", mux); err != nil {
-		log.Fatal(err)
+	// -------------------------------------------------------------------------
+	// Logger
+
+	logger := logging.New(cfg.Logger())
+
+	// -------------------------------------------------------------------------
+	// JWT manager
+
+	jwtManager := token.New(cfg.JWT())
+
+	// -------------------------------------------------------------------------
+	// Cookie manager
+
+	cookieManager := cookie.New(cfg.Cookie())
+
+	// -------------------------------------------------------------------------
+	// Postgres
+
+	pool, err := postgres.NewPool(ctx, cfg.Postgres())
+	if err != nil {
+		logger.Error(
+			"connect to PostgreSQL: %v",
+			slog.Any("error", err),
+		)
+		os.Exit(1)
+	}
+	defer pool.Close()
+
+	queries := db.New(pool)
+
+	// -------------------------------------------------------------------------
+	// Server
+
+	serverApp := app.New(
+		cfg.Server(),
+		logger,
+		queries,
+		jwtManager,
+		cfg.CORS(),
+		cookieManager,
+	)
+
+	// -------------------------------------------------------------------------
+	// Run
+
+	err = serverApp.Run(ctx)
+	if err != nil {
+		logger.Error(
+			"server stopped unexpectedly",
+			slog.Any("error", err),
+		)
 	}
 }
