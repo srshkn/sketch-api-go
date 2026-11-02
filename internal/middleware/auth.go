@@ -6,7 +6,7 @@ import (
 	"net/http"
 	"strings"
 
-	v1Generated "sketch-api-go/internal/generated/v1"
+	v1Generated "sketch-api-go/internal/generated/http/v1"
 	"sketch-api-go/internal/token"
 )
 

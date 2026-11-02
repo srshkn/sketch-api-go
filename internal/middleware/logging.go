@@ -5,7 +5,7 @@ import (
 	"net/http"
 	"time"
 
-	v1Generated "sketch-api-go/internal/generated/v1"
+	v1Generated "sketch-api-go/internal/generated/http/v1"
 )
 
 func Logging(logger *slog.Logger) v1Generated.MiddlewareFunc {

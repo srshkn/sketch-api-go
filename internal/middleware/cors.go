@@ -5,7 +5,7 @@ import (
 	"slices"
 
 	"sketch-api-go/internal/config"
-	v1Generated "sketch-api-go/internal/generated/v1"
+	v1Generated "sketch-api-go/internal/generated/http/v1"
 )
 
 func CORS(cfg config.CORS) v1Generated.MiddlewareFunc {

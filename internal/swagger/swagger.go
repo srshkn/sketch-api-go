@@ -6,7 +6,7 @@ import (
 	"github.com/swaggest/swgui"
 	"github.com/swaggest/swgui/v5emb"
 
-	v1Generated "sketch-api-go/internal/generated/v1"
+	v1Generated "sketch-api-go/internal/generated/http/v1"
 )
 
 // Register добавляет маршруты спецификации OpenAPI и интерфейса Swagger UI.
