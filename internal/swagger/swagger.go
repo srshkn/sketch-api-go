@@ -9,13 +9,18 @@ import (
 	v1Generated "sketch-api-go/internal/generated/v1"
 )
 
+// Register добавляет маршруты спецификации OpenAPI и интерфейса Swagger UI.
 func Register(mux *http.ServeMux) {
 	mux.HandleFunc("GET /openapi.json", openAPISpec)
 
+	// Встроенные ресурсы Swagger UI позволяют раздавать документацию без отдельных
+	// статических файлов; спецификацию интерфейс загружает из /openapi.json.
 	swaggerUI := v5emb.NewHandlerWithConfig(swgui.Config{
 		Title:       "Sketch API",
 		SwaggerJSON: "/openapi.json",
 		BasePath:    "/docs/",
+		// Значения настроек передаются как JSON: схемы раскрываются на один уровень,
+		// а для моделей по умолчанию показываются примеры данных.
 		SettingsUI: map[string]string{
 			"defaultModelsExpandDepth": "1",
 			"defaultModelExpandDepth":  "1",
@@ -29,6 +34,7 @@ func Register(mux *http.ServeMux) {
 	)
 }
 
+// openAPISpec возвращает JSON-спецификацию из сгенерированного пакета API v1.
 func openAPISpec(
 	w http.ResponseWriter,
 	r *http.Request,
