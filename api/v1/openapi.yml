@@ -20,7 +20,6 @@ components:
       bearerFormat: JWT
 
   schemas:
-
     RegisterUserRequest:
       type: object
       required: [username, email, password, confirmation]
@@ -69,7 +68,7 @@ components:
 
     TokensResponse:
       type: object
-      required: [access_token]  # refresh_token
+      required: [access_token] # refresh_token
       properties:
         access_token:
           type: string
@@ -108,6 +107,9 @@ components:
           type: string
 
 paths:
+  # ──────────────────────────────────────────────────────────────
+  # Meta
+  # ──────────────────────────────────────────────────────────────
   /health:
     get:
       tags: [Meta]
@@ -115,62 +117,60 @@ paths:
       description: >
         Endpoint предназначен для проверки работоспособности API.
         Возвращает "OK" и статус 200, если сервис жив.
-      operationId: getHealth
-
       responses:
         "200":
           description: API работает корректно
           content:
-            text/plain:
-              schema:
-                type: string
-                example: OK
-        "500":
-          description: Внутренняя ошибка сервера
-          content:
             application/json:
               schema:
-                $ref: "#/components/schemas/InternalErrorResponse"
+                type: object
+                required: [status]
+                properties:
+                  status:
+                    type: string
+                    example: OK
 
+  # ──────────────────────────────────────────────────────────────
+  # User
+  # ──────────────────────────────────────────────────────────────
   /user/register:
     post:
       tags: [User]
       summary: "Регистрация пользователя."
       description: "..."
-      operationId: registerUser
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/RegisterUserRequest'
+              $ref: "#/components/schemas/RegisterUserRequest"
 
       responses:
-        '201':
+        "201":
           description: Пользователь создан
           content:
             application/json:
               schema:
-                 $ref: '#/components/schemas/UserResponse'
+                $ref: "#/components/schemas/UserResponse"
 
-        '400':
+        "400":
           description: Неверный запрос
           content:
             application/json:
-              schema: { $ref: '#/components/schemas/ErrorResponse' }
+              schema: { $ref: "#/components/schemas/ErrorResponse" }
 
-        '409':
+        "409":
           description: Пользователь уже существует
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
 
-        '500':
+        "500":
           description: Внутренняя ошибка сервера
           content:
             application/json:
-              schema: { $ref: '#/components/schemas/InternalErrorResponse' }
+              schema: { $ref: "#/components/schemas/InternalErrorResponse" }
 
   /user/me:
     get:
@@ -182,58 +182,60 @@ paths:
       operationId: getMe
 
       responses:
-        '200':
+        "200":
           description: Информация о пользователе
           content:
             application/json:
               schema:
-                 $ref: '#/components/schemas/UserResponse'
+                $ref: "#/components/schemas/UserResponse"
 
-        '500':
+        "500":
           description: Внутренняя ошибка сервера
           content:
             application/json:
-              schema: { $ref: '#/components/schemas/InternalErrorResponse' }
+              schema: { $ref: "#/components/schemas/InternalErrorResponse" }
 
+  # ──────────────────────────────────────────────────────────────
+  # Auth
+  # ──────────────────────────────────────────────────────────────
   /auth/login:
     post:
       tags: [Auth]
       summary: "Аутентификация пользователя."
       description: "..."
-      operationId: loginUser
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/LoginUserRequest'
+              $ref: "#/components/schemas/LoginUserRequest"
 
       responses:
-        '200':
+        "200":
           description: Пользователь вошёл
           content:
             application/json:
               schema:
-                 $ref: '#/components/schemas/TokensResponse'
+                $ref: "#/components/schemas/TokensResponse"
 
-        '400':
-            description: Неверный запрос
-            content:
-              application/json:
-                schema: { $ref: '#/components/schemas/ErrorResponse' }
+        "400":
+          description: Неверный запрос
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ErrorResponse" }
 
-        '409':
+        "409":
           description: Пользователя не существует
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
 
-        '500':
+        "500":
           description: Внутренняя ошибка сервера
           content:
             application/json:
-              schema: { $ref: '#/components/schemas/InternalErrorResponse' }
+              schema: { $ref: "#/components/schemas/InternalErrorResponse" }
 
   /auth/logout:
     post:
@@ -242,48 +244,46 @@ paths:
       tags: [Auth]
       summary: "Выход из аккаунта."
       description: "..."
-      operationId: logoutUser
 
       responses:
-        '204':
+        "204":
           description: Пользователь вышел
 
-        '500':
+        "500":
           description: Внутренняя ошибка сервера
           content:
             application/json:
-              schema: { $ref: '#/components/schemas/InternalErrorResponse' }
+              schema: { $ref: "#/components/schemas/InternalErrorResponse" }
 
   /auth/refresh:
     post:
       tags: [Auth]
       summary: "Обновление рефреш токена."
       description: "..."
-      operationId: updateRefreshToken
-    
+
       responses:
-        '200':
+        "200":
           description: Пользователь вошёл
           content:
             application/json:
               schema:
-                 $ref: '#/components/schemas/TokensResponse'
+                $ref: "#/components/schemas/TokensResponse"
 
-        '400':
-            description: Неверный запрос
-            content:
-              application/json:
-                schema: { $ref: '#/components/schemas/ErrorResponse' }
+        "400":
+          description: Неверный запрос
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ErrorResponse" }
 
-        '409':
+        "409":
           description: Пользователя не существует
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
 
-        '500':
+        "500":
           description: Внутренняя ошибка сервера
           content:
             application/json:
-              schema: { $ref: '#/components/schemas/InternalErrorResponse' }
+              schema: { $ref: "#/components/schemas/InternalErrorResponse" }
